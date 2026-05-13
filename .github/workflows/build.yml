@@ -2,44 +2,78 @@ name: build
 
 on:
   push:
-    branches: [main]
+    branches: [main, macos-port]
     tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write  # needed for softprops/action-gh-release on tag push
+  contents: write  # softprops/action-gh-release on tag push
 
 jobs:
-  linux-x86_64:
-    runs-on: ubuntu-22.04
-    container:
-      # manylinux_2_28 = AlmaLinux 8 base, glibc 2.28. Widest deploy compat:
-      # works on RHEL/Alma/Rocky 8+, Debian 11+, Ubuntu 20.04+. The L4-L6
-      # libraries (GnuTLS, GLib, Cairo) pull in too much glibc surface for
-      # ubuntu-22.04 (glibc 2.35) artifacts to be portable downstream.
-      image: quay.io/pypa/manylinux_2_28_x86_64
+  build:
+    name: build-${{ matrix.platform }}
+    runs-on: ${{ matrix.runs-on }}
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x86_64
+            runs-on: ubuntu-22.04
+            # manylinux_2_28 = AlmaLinux 8 base, glibc 2.28. Widest deploy
+            # compat: works on RHEL/Alma/Rocky 8+, Debian 11+, Ubuntu 20.04+.
+            container: quay.io/pypa/manylinux_2_28_x86_64
+            artifact: install-linux-x86_64.tar.zst
+          - platform: macos-arm64
+            # Apple Silicon runner. macos-14 = macOS 14 (Sonoma) on M1.
+            runs-on: macos-14
+            container: ''
+            artifact: install-macos-arm64.tar.zst
     steps:
       - uses: actions/checkout@v4
 
-      - name: install build deps (manylinux has gcc-14/cmake/autoconf/patchelf)
+      - name: install build deps (linux)
+        if: matrix.platform == 'linux-x86_64'
         run: |
           /usr/bin/dnf install -y zstd which file diffutils gettext gettext-devel perl-interpreter
-          # meson + ninja from pip (manylinux ships multiple pythons; cp311 is fine)
           /opt/python/cp311-cp311/bin/pip install --no-cache-dir meson ninja
           ln -sf /opt/python/cp311-cp311/bin/meson /usr/local/bin/meson
           ln -sf /opt/python/cp311-cp311/bin/ninja /usr/local/bin/ninja
           ln -sf /opt/python/cp311-cp311/bin/python3 /usr/local/bin/python3-meson
 
+      - name: install build deps (macos)
+        if: matrix.platform == 'macos-arm64'
+        run: |
+          # macos-14 runner already has: clang/clang++/make/cmake/autoconf/
+          # automake/libtool/pkg-config/ninja/Xcode CLT. We need meson + nasm
+          # (some libs assemble) + zstd + modern bash (system /bin/bash is
+          # still 3.2; build-all.sh uses `mapfile -t` which needs 4+).
+          # Avoid installing any *libraries* via brew — only build-time
+          # tools — so the install/lib tree stays self-contained.
+          brew update >/dev/null 2>&1 || true
+          brew install --quiet bash meson nasm zstd || true
+          echo "/opt/homebrew/bin" >> "$GITHUB_PATH"
+          # Defensive: kill any DYLD_* env that could redirect dlopen to
+          # brew during the build.
+          echo "DYLD_LIBRARY_PATH=" >> "$GITHUB_ENV"
+          echo "DYLD_FALLBACK_LIBRARY_PATH=" >> "$GITHUB_ENV"
+          # Target the oldest Apple Silicon macOS (11.0 Big Sur). Without
+          # this Apple Clang would target the runner's host SDK (14+),
+          # producing dylibs that refuse to load on older systems.
+          echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> "$GITHUB_ENV"
+
       - name: tool versions
         run: |
-          gcc --version | head -1
+          uname -a
+          cc --version 2>/dev/null | head -1 || gcc --version | head -1
           cmake --version | head -1
-          patchelf --version
           meson --version
           ninja --version
           python3 --version
+          if command -v patchelf >/dev/null 2>&1; then patchelf --version; fi
+          if command -v install_name_tool >/dev/null 2>&1; then echo "install_name_tool: present"; fi
           zstd --version | head -1
 
       - name: fetch sources
@@ -56,9 +90,10 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: bash scripts/package.sh
 
-      - name: list artifact contents
+      - name: list artifact contents (linux)
+        if: matrix.platform == 'linux-x86_64'
         run: |
-          ls -lh install-linux-x86_64.tar.zst
+          ls -lh "${{ matrix.artifact }}"
           echo "── META.txt ──"
           cat install/META.txt
           echo "── RUNPATH sanity ──"
@@ -69,17 +104,52 @@ jobs:
             printf '%-40s %s\n' "${f##*/}" "$line"
           done
 
+      - name: list artifact contents (macos)
+        if: matrix.platform == 'macos-arm64'
+        run: |
+          ls -lh "${{ matrix.artifact }}"
+          echo "── META.txt ──"
+          cat install/META.txt
+          echo "── install_name + LC_RPATH + LC_LOAD_DYLIB sanity ──"
+          shopt -s nullglob
+          for f in install/lib/*.dylib; do
+            [[ -L "$f" ]] && continue
+            base="${f##*/}"
+            id=$(otool -D "$f" 2>/dev/null | tail -n +2 | head -1)
+            rpaths=$(otool -l "$f" | awk '/cmd LC_RPATH/{flag=1;next} flag && /path /{print $2; flag=0}' | paste -sd' ' -)
+            echo "── $base ──"
+            echo "  install_name: $id"
+            echo "  rpaths      : $rpaths"
+            # Any dep outside our allow-list should already be fatal earlier;
+            # double-check here.
+            otool -L "$f" | tail -n +2 | awk '{print $1}' | \
+              grep -vE "^(@rpath/|@loader_path/|/usr/lib/|/System/Library/|${base}$)" \
+              && { echo "  ❌ FOREIGN dep above"; exit 1; } || true
+            # Signature check.
+            codesign -dv "$f" 2>&1 | head -2 | sed 's/^/  /'
+          done
+
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: install-linux-x86_64
-          path: install-linux-x86_64.tar.zst
+          name: ${{ matrix.platform }}
+          path: ${{ matrix.artifact }}
           retention-days: 30
 
-      - name: release (on tag)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          files: install-linux-x86_64.tar.zst
+          path: artifacts
+      - name: list downloaded artifacts
+        run: ls -lR artifacts
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/linux-x86_64/install-linux-x86_64.tar.zst
+            artifacts/macos-arm64/install-macos-arm64.tar.zst
           generate_release_notes: true
           fail_on_unmatched_files: true
