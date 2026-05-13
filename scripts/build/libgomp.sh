@@ -10,6 +10,18 @@ if is_macos; then
   exit 0
 fi
 
+if is_windows; then
+  # Windows: ship the entire mingw-w64 toolchain runtime quartet
+  # (libgcc_s_seh-1, libstdc++-6, libwinpthread-1, libgomp-1) from
+  # ${MSYSTEM_PREFIX}/bin/. These DLLs are linked into every other
+  # libcommon DLL by the mingw GCC frontend, so they MUST be co-shipped.
+  log "shipping mingw toolchain runtime DLLs (incl. libgomp-1.dll)"
+  ship_mingw_runtime
+  WINDOWS_DLL_OVERRIDE="libgomp-1.dll" assert_soname "libgomp.so.1"
+  log "done"
+  exit 0
+fi
+
 log "locating libgomp from system gcc"
 sysgomp=""
 for cand in \
