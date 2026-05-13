@@ -338,3 +338,31 @@ url = "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.8/gnutls-3.8.6.tar.xz"
 sha256 = "2e1588aae53cb32d43937f1f4eca28febd9c0c7aa1734fc5dd61a7e81e0ebcdd"
 layer = "L4"
 build = "gnutls"
+
+# ─── L5 (X11 extension libs) ────────────────────────────────────────────────
+
+[[source]]
+name = "libXext"
+version = "1.3.6"
+url = "https://www.x.org/releases/individual/lib/libXext-1.3.6.tar.xz"
+sha256 = "edb59fa23994e405fdc5b400afdf5820ae6160b94f35e3dc3da4457a16e89753"
+layer = "L5"
+build = "libXext"
+
+[[source]]
+name = "libXrender"
+version = "0.9.11"
+url = "https://www.x.org/releases/individual/lib/libXrender-0.9.11.tar.xz"
+sha256 = "bc53759a3a83d1ff702fb59641b3d2f7c56e05051fa0cfa93501166fa782dc24"
+layer = "L5"
+build = "libXrender"
+
+# ─── L6 (2D graphics) ───────────────────────────────────────────────────────
+
+[[source]]
+name = "cairo"
+version = "1.18.2"
+url = "https://cairographics.org/releases/cairo-1.18.2.tar.xz"
+sha256 = "a62b9bb42425e844cc3d6ddde043ff39dbabedd1542eba57a2eb79f85889d45a"
+layer = "L6"
+build = "cairo"

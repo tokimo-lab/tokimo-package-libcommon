@@ -190,7 +190,8 @@ source = "libxml2"
 # 2D 绘图
 [[libcommon.libs]]
 soname = "libcairo.so.2"
-status = "planned"
+status = "built"
+source = "cairo"
 
 # X11 / XCB
 [[libcommon.libs]]
@@ -210,11 +211,13 @@ source = "libXdmcp"
 
 [[libcommon.libs]]
 soname = "libXext.so.6"
-status = "planned"
+status = "built"
+source = "libXext"
 
 [[libcommon.libs]]
 soname = "libXrender.so.1"
-status = "planned"
+status = "built"
+source = "libXrender"
 
 [[libcommon.libs]]
 soname = "libxcb.so.1"
