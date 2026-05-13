@@ -35,19 +35,27 @@ log "installing"
 make install
 
 # libxcb ships many extension shims (libxcb-render, libxcb-shm, libxcb-randr,
-# libxcb-xfixes, …). Registry currently only tracks libxcb.so.1 as built for
-# L3; the *named* extensions (libxcb-render/-shm) are still "planned" and any
-# unlisted extension would fail verify.sh. Drop everything except the core
-# library — extensions will be re-enabled in a later layer when cairo needs
-# them and the registry flips them to built.
+# libxcb-xfixes, …). L4 promotes libxcb-render.so.0 and libxcb-shm.so.0 to
+# "built" (cairo at L6 needs them); every other extension is still "planned"
+# in registry.toml and verify.sh would reject any that ship. Keep render+shm,
+# delete the rest.
 shopt -s nullglob
+KEEP_RE='libxcb-(render|shm)\.so'
 for f in "${INSTALL_DIR}/lib"/libxcb-*.so*; do
+  base="$(basename "${f}")"
+  if [[ "${base}" =~ ${KEEP_RE} ]]; then
+    continue
+  fi
   rm -f "${f}"
 done
-# pkg-config files for the disabled extensions point at missing libs;
-# drop them too so downstream configures don't pick up half-installed deps.
+# pkg-config files: keep xcb-render.pc and xcb-shm.pc, drop the rest so
+# downstream configures don't pick up half-installed deps.
 for pc in "${INSTALL_DIR}/lib/pkgconfig"/xcb-*.pc; do
-  rm -f "${pc}"
+  base="$(basename "${pc}")"
+  case "${base}" in
+    xcb-render.pc|xcb-shm.pc) continue ;;
+    *) rm -f "${pc}" ;;
+  esac
 done
 shopt -u nullglob
 
@@ -55,4 +63,6 @@ log "post-processing"
 post_process_install
 
 assert_soname "libxcb.so.1"
+assert_soname "libxcb-render.so.0"
+assert_soname "libxcb-shm.so.0"
 log "done"

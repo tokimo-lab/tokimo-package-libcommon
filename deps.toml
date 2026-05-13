@@ -292,3 +292,49 @@ url = "https://github.com/p11-glue/p11-kit/releases/download/0.25.5/p11-kit-0.25
 sha256 = "04d0a86450cdb1be018f26af6699857171a188ac6d5b8c90786a60854e1198e5"
 layer = "L3"
 build = "p11-kit"
+
+# ─── L4 ─────────────────────────────────────────────────────────────────────
+
+# xtrans: X11 transport header-only macros, consumed by libX11 at build time.
+# Ships no .so — installs headers + pkg-config only (no SONAME, no registry).
+[[source]]
+name = "xtrans"
+version = "1.5.2"
+url = "https://www.x.org/releases/individual/lib/xtrans-1.5.2.tar.xz"
+sha256 = "5c5cbfe34764a9131d048f03c31c19e57fb4c682d67713eab6a65541b4dff86c"
+layer = "L4"
+build = "xtrans"
+
+# xorgproto: X11 protocol headers (X.h, Xproto.h, …) consumed by libX11.
+# Ships no .so — headers + pkg-config only.
+[[source]]
+name = "xorgproto"
+version = "2024.1"
+url = "https://www.x.org/releases/individual/proto/xorgproto-2024.1.tar.xz"
+sha256 = "372225fd40815b8423547f5d890c5debc72e88b91088fbfb13158c20495ccb59"
+layer = "L4"
+build = "xorgproto"
+
+[[source]]
+name = "libX11"
+version = "1.8.10"
+url = "https://www.x.org/releases/individual/lib/libX11-1.8.10.tar.xz"
+sha256 = "2b3b3dad9347db41dca56beb7db5878f283bde1142f04d9f8e478af435dfdc53"
+layer = "L4"
+build = "libX11"
+
+[[source]]
+name = "harfbuzz"
+version = "9.0.0"
+url = "https://github.com/harfbuzz/harfbuzz/releases/download/9.0.0/harfbuzz-9.0.0.tar.xz"
+sha256 = "a41b272ceeb920c57263ec851604542d9ec85ee3030506d94662067c7b6ab89e"
+layer = "L4"
+build = "harfbuzz"
+
+[[source]]
+name = "gnutls"
+version = "3.8.6"
+url = "https://www.gnupg.org/ftp/gcrypt/gnutls/v3.8/gnutls-3.8.6.tar.xz"
+sha256 = "2e1588aae53cb32d43937f1f4eca28febd9c0c7aa1734fc5dd61a7e81e0ebcdd"
+layer = "L4"
+build = "gnutls"

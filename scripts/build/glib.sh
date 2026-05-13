@@ -35,9 +35,14 @@ meson compile -C "${build}" -j "${NPROC}"
 log "installing"
 meson install -C "${build}"
 
-# Drop installed CLI tools (not part of our shipped runtime).
-rm -rf "${INSTALL_DIR}/bin/glib-"* \
-       "${INSTALL_DIR}/bin/gio"* \
+# Drop installed runtime CLI tools we don't ship. KEEP the Python codegen
+# helpers (glib-mkenums, glib-genmarshal, glib-compile-resources,
+# glib-compile-schemas) — they are pure Python scripts referenced by
+# glib-2.0.pc's tool variables, and downstream meson builds (e.g. harfbuzz,
+# gobject-introspection consumers) read those variables and *execute* the
+# tool. Deleting them caused harfbuzz's meson setup to error out with
+# "Dependency 'glib-2.0' tool variable 'glib_mkenums' contains erroneous value".
+rm -rf "${INSTALL_DIR}/bin/gio"* \
        "${INSTALL_DIR}/bin/gobject-"* \
        "${INSTALL_DIR}/bin/gdbus"* \
        "${INSTALL_DIR}/bin/gsettings"* \

@@ -96,7 +96,8 @@ source = "nettle"
 
 [[libcommon.libs]]
 soname = "libgnutls.so.30"
-status = "planned"
+status = "built"
+source = "gnutls"
 
 [[libcommon.libs]]
 soname = "libtasn1.so.6"
@@ -162,7 +163,8 @@ source = "fontconfig"
 
 [[libcommon.libs]]
 soname = "libharfbuzz.so.0"
-status = "planned"
+status = "built"
+source = "harfbuzz"
 
 [[libcommon.libs]]
 soname = "libgraphite2.so.3"
@@ -193,7 +195,8 @@ status = "planned"
 # X11 / XCB
 [[libcommon.libs]]
 soname = "libX11.so.6"
-status = "planned"
+status = "built"
+source = "libX11"
 
 [[libcommon.libs]]
 soname = "libXau.so.6"
@@ -220,11 +223,13 @@ source = "libxcb"
 
 [[libcommon.libs]]
 soname = "libxcb-render.so.0"
-status = "planned"
+status = "built"
+source = "libxcb"
 
 [[libcommon.libs]]
 soname = "libxcb-shm.so.0"
-status = "planned"
+status = "built"
+source = "libxcb"
 
 # 杂项 unix
 [[libcommon.libs]]
