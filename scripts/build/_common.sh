@@ -44,7 +44,7 @@ export CXXFLAGS="${CXXFLAGS:--O2 -fPIC -pipe}"
 # in post_process_install (do NOT bake $ORIGIN here — many upstream Makefiles
 # would expand it inside the shell and emit a literal "RIGIN" rpath).
 export CPPFLAGS="${CPPFLAGS:-} -I${INSTALL_DIR}/include"
-export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -L${INSTALL_DIR}/lib64"
+export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -L${INSTALL_DIR}/lib64 -Wl,-z,noseparate-code"
 
 # ─── logging ────────────────────────────────────────────────────────────────
 log()   { printf '\033[1;34m[%s]\033[0m %s\n' "${LIB_NAME:-libcommon}" "$*"; }
@@ -101,8 +101,29 @@ post_process_install() {
       # Strip any pre-existing RPATH/RUNPATH first, then install RUNPATH
       # (NOT RPATH). Without --force-rpath, patchelf emits DT_RUNPATH, which
       # honors LD_LIBRARY_PATH overrides and is the modern default.
-      patchelf --remove-rpath "${f}" 2>/dev/null || true
-      patchelf --set-rpath '$ORIGIN' "${f}" || log "warn: patchelf failed on ${f##*/}"
+      #
+      # IDEMPOTENCY GUARD: patchelf 0.17.2 has a cumulative bug — each
+      # --set-rpath pass appends extra zero-size RW LOAD segments to the
+      # file. After ~10+ passes the resulting file becomes unloadable with
+      # "ELF load command address/offset not properly aligned" at runtime
+      # (loader sees them, downstream libs that NEEDED us then fail to
+      # load). Because post_process_install runs after every build and
+      # patches every .so in install/lib, earlier libs accumulate dozens
+      # of passes by the time later layers build. Skip files that are
+      # already correctly patched.
+      #
+      # DATA-ONLY LIBS: skip files with zero DT_NEEDED entries (e.g.
+      # libicudata.so — a 30 MB blob with no dependencies). Their giant
+      # first LOAD segment confuses patchelf 0.17.2's segment-padding
+      # arithmetic, producing alignment errors. They don't need RUNPATH
+      # anyway since they don't dlopen anything.
+      local current_rpath needed_count
+      current_rpath="$(patchelf --print-rpath "${f}" 2>/dev/null || true)"
+      needed_count="$(patchelf --print-needed "${f}" 2>/dev/null | wc -l)"
+      if [[ "${current_rpath}" != '$ORIGIN' && "${needed_count}" -gt 0 ]]; then
+        patchelf --remove-rpath "${f}" 2>/dev/null || true
+        patchelf --set-rpath '$ORIGIN' "${f}" || log "warn: patchelf failed on ${f##*/}"
+      fi
     fi
     if command -v strip >/dev/null 2>&1; then
       # Strip atomically: write to temp, only swap on success. Some binutils
