@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [main, macos-port]
+    branches: [main, macos-port, windows-port]
     tags: ['v*']
   pull_request:
     branches: [main]
@@ -16,6 +16,9 @@ jobs:
     name: build-${{ matrix.platform }}
     runs-on: ${{ matrix.runs-on }}
     container: ${{ matrix.container }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     strategy:
       fail-fast: false
       matrix:
@@ -26,11 +29,20 @@ jobs:
             # compat: works on RHEL/Alma/Rocky 8+, Debian 11+, Ubuntu 20.04+.
             container: quay.io/pypa/manylinux_2_28_x86_64
             artifact: install-linux-x86_64.tar.zst
+            shell: bash
           - platform: macos-arm64
             # Apple Silicon runner. macos-14 = macOS 14 (Sonoma) on M1.
             runs-on: macos-14
             container: ''
             artifact: install-macos-arm64.tar.zst
+            shell: bash
+          - platform: windows-x86_64
+            # windows-2022 runner + msys2 native MINGW64 environment.
+            # All build steps run inside the msys2 bash shell.
+            runs-on: windows-2022
+            container: ''
+            artifact: install-windows-x86_64.tar.zst
+            shell: 'msys2 {0}'
     steps:
       - uses: actions/checkout@v4
 
@@ -68,6 +80,32 @@ jobs:
           # producing dylibs that refuse to load on older systems.
           echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> "$GITHUB_ENV"
 
+      - name: install build deps (windows / msys2)
+        if: matrix.platform == 'windows-x86_64'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          # IMPORTANT: install ONLY toolchain + build tools, never any
+          # mingw-w64-x86_64-{zlib,libpng,…} runtime libraries. We build
+          # every shared lib ourselves from upstream sources to avoid
+          # accidentally linking against / shipping a system zlib.
+          install: >-
+            base-devel
+            git
+            patch
+            tar
+            zstd
+            unzip
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-meson
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-python
+            mingw-w64-x86_64-python-packaging
+            mingw-w64-x86_64-nasm
+
       - name: tool versions
         run: |
           uname -a
@@ -86,7 +124,7 @@ jobs:
       - name: build all layers
         run: bash scripts/build-all.sh --all
 
-      - name: verify SONAMEs against registry
+      - name: verify SONAMEs / DLLs against registry
         run: bash scripts/verify.sh
 
       - name: package
@@ -133,6 +171,21 @@ jobs:
             codesign -dv "$f" 2>&1 | head -2 | sed 's/^/  /'
           done
 
+      - name: list artifact contents (windows)
+        if: matrix.platform == 'windows-x86_64'
+        run: |
+          ls -lh "${{ matrix.artifact }}"
+          echo "── META.txt ──"
+          cat install/META.txt
+          echo "── install/bin/*.dll dependency listing ──"
+          shopt -s nullglob
+          for f in install/bin/*.dll; do
+            [[ -f "$f" ]] || continue
+            base="${f##*/}"
+            echo "── $base ──"
+            objdump -p "$f" 2>/dev/null | grep "DLL Name:" | sed 's/^/  /'
+          done
+
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -155,5 +208,6 @@ jobs:
           files: |
             artifacts/linux-x86_64/install-linux-x86_64.tar.zst
             artifacts/macos-arm64/install-macos-arm64.tar.zst
+            artifacts/windows-x86_64/install-windows-x86_64.tar.zst
           generate_release_notes: true
           fail_on_unmatched_files: true
