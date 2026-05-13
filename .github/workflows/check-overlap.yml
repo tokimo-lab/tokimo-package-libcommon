@@ -23,4 +23,4 @@ jobs:
   noop:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "TODO P1.B: implement cross-repo SONAME overlap check"
+      - run: 'echo "TODO P1.B: implement cross-repo SONAME overlap check"'
