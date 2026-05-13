@@ -126,17 +126,33 @@ for entry in data.get("source", []):
             archive.unlink()
 
     if need_download:
-        print(f"[fetch]   downloading {url}")
+        print(f"[fetch]   downloading {url}", flush=True)
         tmp = archive.with_suffix(archive.suffix + ".part")
         if tmp.exists():
             tmp.unlink()
-        urllib.request.urlretrieve(url, tmp)
+        # Use curl with explicit timeouts + retries instead of urllib.
+        # urllib.request.urlretrieve has no default timeout and msys2's
+        # Python sometimes stalls indefinitely on TLS handshakes against
+        # mirrors that don't respond. curl is present everywhere we run.
+        subprocess.run(
+            [
+                "curl",
+                "-fsSL",
+                "--connect-timeout", "30",
+                "--max-time", "600",
+                "--retry", "4",
+                "--retry-delay", "5",
+                "-o", str(tmp),
+                url,
+            ],
+            check=True,
+        )
         actual = sha256_file(tmp)
         if actual != want_sha:
             tmp.unlink()
             raise SystemExit(f"sha256 mismatch for {name}: want {want_sha}, got {actual}")
         tmp.rename(archive)
-        print(f"[fetch]   sha256 OK")
+        print(f"[fetch]   sha256 OK", flush=True)
 
     marker = target / ".fetch.sha256"
     if target.exists() and marker.exists() and marker.read_text().strip() == want_sha:
