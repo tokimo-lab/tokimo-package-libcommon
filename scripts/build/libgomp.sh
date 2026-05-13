@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # libgomp — copied from the toolchain (GCC runtime). No upstream tarball.
-# We resolve symlinks (cp -L) so we ship a single concrete .so.1 with
-# RUNPATH=$ORIGIN, free of any toolchain-specific RPATH baggage.
+# macOS: skipped (Apple Clang doesn't ship libgomp; ffmpeg/libvips on macOS
+# are built without GCC OpenMP). Registry treats it as platform-conditional.
 LIB_NAME="libgomp"
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
+
+if is_macos; then
+  log "skipping on macOS (no GCC OpenMP runtime; consumers use libomp if needed)"
+  exit 0
+fi
 
 log "locating libgomp from system gcc"
 sysgomp=""
