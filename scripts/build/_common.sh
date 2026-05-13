@@ -60,7 +60,10 @@ if is_linux; then
   export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -L${INSTALL_DIR}/lib64 -Wl,-z,noseparate-code"
 else
   # macOS ld64: no -z,noseparate-code; no lib64 (macOS only uses lib).
-  export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib"
+  # Add absolute rpath so configure AC_RUN_IFELSE tests can dyld-load
+  # already-installed libs (which have install_name=@rpath/...). Final
+  # dylibs get this LC_RPATH stripped by post_process_install_macos.
+  export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -Wl,-rpath,${INSTALL_DIR}/lib"
 fi
 
 # ─── logging ────────────────────────────────────────────────────────────────
@@ -232,6 +235,13 @@ post_process_install_macos() {
     if ! otool -l "${f}" 2>/dev/null | grep -A2 'cmd LC_RPATH' | grep -q '@loader_path$'; then
       install_name_tool -add_rpath "@loader_path" "${f}" 2>/dev/null || true
     fi
+
+    # 2b. Strip absolute INSTALL_DIR rpath baked in by LDFLAGS during build.
+    # We need it during configure for AC_RUN_IFELSE tests, but it must NOT
+    # ship in the final dylib (would make the package non-relocatable).
+    while otool -l "${f}" 2>/dev/null | grep -A2 'cmd LC_RPATH' | grep -q "path ${INSTALL_DIR}/lib "; do
+      install_name_tool -delete_rpath "${INSTALL_DIR}/lib" "${f}" 2>/dev/null || break
+    done
 
     # 3. Rewrite LC_LOAD_DYLIB entries.
     local dep
