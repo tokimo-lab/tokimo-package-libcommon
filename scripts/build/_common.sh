@@ -15,17 +15,25 @@ export REGISTRY_FILE="${REPO_ROOT}/registry.toml"
 # ─── platform ───────────────────────────────────────────────────────────────
 HOST_OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 HOST_ARCH="$(uname -m)"
+# msys2 mingw64 reports uname -s as MINGW64_NT-10.0-... and arch as x86_64.
+case "${HOST_OS}" in
+  mingw64_nt*|mingw32_nt*|msys_nt*) HOST_OS="mingw64" ;;
+esac
 case "${HOST_OS}-${HOST_ARCH}" in
   linux-x86_64)   export PLATFORM="linux-x86_64"; export SHLIB_EXT="so" ;;
   darwin-arm64)   export PLATFORM="macos-arm64"; export SHLIB_EXT="dylib" ;;
+  mingw64-x86_64) export PLATFORM="windows-x86_64"; export SHLIB_EXT="dll" ;;
   *) echo "FATAL: platform ${HOST_OS}-${HOST_ARCH} not supported" >&2; exit 1 ;;
 esac
 
-is_linux() { [[ "${PLATFORM}" == "linux-x86_64" ]]; }
-is_macos() { [[ "${PLATFORM}" == "macos-arm64" ]]; }
-export -f is_linux is_macos 2>/dev/null || true
+is_linux()   { [[ "${PLATFORM}" == "linux-x86_64" ]]; }
+is_macos()   { [[ "${PLATFORM}" == "macos-arm64" ]]; }
+is_windows() { [[ "${PLATFORM}" == "windows-x86_64" ]]; }
+export -f is_linux is_macos is_windows 2>/dev/null || true
 
 # GNU ld-only linker flag. Empty on macOS (Apple ld64 rejects it).
+# mingw ld accepts -Wl,-z but the option is a no-op on PE; keep empty to
+# avoid noise.
 if is_linux; then
   export LDFLAGS_GNU_LD="-Wl,-z,noseparate-code"
 else
@@ -58,12 +66,26 @@ export CXXFLAGS="${CXXFLAGS:--O2 -fPIC -pipe}"
 export CPPFLAGS="${CPPFLAGS:-} -I${INSTALL_DIR}/include"
 if is_linux; then
   export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -L${INSTALL_DIR}/lib64 -Wl,-z,noseparate-code"
-else
+elif is_macos; then
   # macOS ld64: no -z,noseparate-code; no lib64 (macOS only uses lib).
   # Add absolute rpath so configure AC_RUN_IFELSE tests can dyld-load
   # already-installed libs (which have install_name=@rpath/...). Final
   # dylibs get this LC_RPATH stripped by post_process_install_macos.
   export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -Wl,-rpath,${INSTALL_DIR}/lib"
+else
+  # Windows / mingw-w64. PE has no RPATH — the linker resolves siblings via
+  # the build-time -L tree, and at runtime the host process must call
+  # SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_APPLICATION_DIR) or
+  # AddDllDirectory(install/bin). Both install/lib (for import libs *.dll.a)
+  # and install/bin (for DLLs themselves) are added to -L. -fPIC is silently
+  # a no-op on PE (warning suppressed at gcc 15).
+  export CFLAGS="${CFLAGS} -Wno-attributes"
+  export CXXFLAGS="${CXXFLAGS} -Wno-attributes"
+  export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -L${INSTALL_DIR}/bin"
+  # Pin pkg-config to our tree ONLY: msys2's /mingw64 ships pkg-config files
+  # for any optionally-installed prebuilt lib (zlib, libpng…). We never
+  # install those, but LIBDIR override is a defensive belt-and-suspenders.
+  export PKG_CONFIG_LIBDIR="${INSTALL_DIR}/lib/pkgconfig:${INSTALL_DIR}/share/pkgconfig"
 fi
 
 # ─── logging ────────────────────────────────────────────────────────────────
@@ -87,11 +109,16 @@ need_tool() {
 drop_lib() {
   local stem="$1"
   local libdir="${INSTALL_DIR}/lib"
+  local bindir="${INSTALL_DIR}/bin"
   shopt -s nullglob
   local f
   for f in "${libdir}/${stem}".so* \
            "${libdir}/${stem}".dylib \
-           "${libdir}/${stem}".*.dylib; do
+           "${libdir}/${stem}".*.dylib \
+           "${libdir}/${stem}".dll.a \
+           "${libdir}/${stem}"-*.dll.a \
+           "${bindir}/${stem}".dll \
+           "${bindir}/${stem}"-*.dll; do
     rm -f "${f}"
   done
   shopt -u nullglob
@@ -128,6 +155,8 @@ source_dir() {
 post_process_install() {
   if is_macos; then
     post_process_install_macos
+  elif is_windows; then
+    post_process_install_windows
   else
     post_process_install_linux
   fi
@@ -291,6 +320,87 @@ post_process_install_macos() {
   rm -f "${INSTALL_DIR}/lib"/*.a "${INSTALL_DIR}/lib"/*.la 2>/dev/null || true
 }
 
+# Windows / mingw post-processing.
+#
+# Layout: build systems (autotools/libtool, cmake, meson) put the runtime
+# DLL in ${INSTALL_DIR}/bin and the import library (libfoo.dll.a) in
+# ${INSTALL_DIR}/lib. PE has no RPATH; resolution at runtime is filename
+# based via DLL search order, so the only post-processing we do is:
+#   1. Strip debug info (mingw `strip --strip-unneeded`).
+#   2. Drop libtool .la files + any installed static archive.
+#   3. Normalize lib64 → lib (rare on mingw but cheap).
+#
+# Notable non-actions vs Linux:
+#   - No SONAME (PE has none); identity is the basename.
+#   - No RPATH normalization.
+#   - The toolchain runtime DLLs (libgcc_s_seh-1.dll, libstdc++-6.dll,
+#     libwinpthread-1.dll, libgomp-1.dll) are NOT copied here — that is
+#     a per-build step or a final packaging step (see ship_mingw_runtime
+#     below + libgomp.sh).
+post_process_install_windows() {
+  local bindir="${INSTALL_DIR}/bin"
+  local libdir="${INSTALL_DIR}/lib"
+  shopt -s nullglob
+
+  if command -v strip >/dev/null 2>&1; then
+    local f
+    for f in "${bindir}"/*.dll; do
+      [[ -L "${f}" ]] && continue
+      [[ -f "${f}" ]] || continue
+      if strip --strip-unneeded -o "${f}.stripped" "${f}" >/dev/null 2>&1; then
+        mv -f "${f}.stripped" "${f}"
+      else
+        rm -f "${f}.stripped"
+      fi
+    done
+  fi
+
+  # Drop libtool sidecars and pure-static archives, but keep import libs
+  # (libfoo.dll.a). bash glob '*.a' DOES match 'libfoo.dll.a' so we have
+  # to filter in a loop.
+  shopt -s nullglob
+  rm -f "${libdir}"/*.la
+  for f in "${libdir}"/*.a; do
+    case "${f}" in
+      *.dll.a) ;;     # import lib — keep
+      *) rm -f "${f}" ;;
+    esac
+  done
+  shopt -u nullglob
+
+  # Normalize lib64 → lib (uncommon on mingw but possible from cmake).
+  if [[ -d "${INSTALL_DIR}/lib64" ]]; then
+    mkdir -p "${INSTALL_DIR}/lib"
+    shopt -s nullglob dotglob
+    for src in "${INSTALL_DIR}/lib64"/*; do
+      [[ -e "${src}" ]] || continue
+      mv -f "${src}" "${INSTALL_DIR}/lib/"
+    done
+    shopt -u nullglob dotglob
+  fi
+}
+
+# Copy mingw runtime DLLs (libgcc_s_seh-1, libstdc++-6, libwinpthread-1,
+# libgomp-1) from the toolchain into install/bin so consumers can ship a
+# self-contained tarball. Called from libgomp.sh on Windows (acts as the
+# stand-in for what libgomp.sh does on Linux).
+ship_mingw_runtime() {
+  local bindir="${INSTALL_DIR}/bin"
+  mkdir -p "${bindir}"
+  # MSYSTEM_PREFIX is set by the msys2 shell launcher: /mingw64 for MINGW64.
+  local prefix="${MSYSTEM_PREFIX:-/mingw64}"
+  local dll
+  for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll libgomp-1.dll; do
+    if [[ -f "${prefix}/bin/${dll}" ]]; then
+      cp -f "${prefix}/bin/${dll}" "${bindir}/${dll}"
+      chmod 0755 "${bindir}/${dll}"
+      log "shipped toolchain runtime: ${dll}"
+    else
+      log "warn: ${prefix}/bin/${dll} not found (toolchain may not have it; OK if so)"
+    fi
+  done
+}
+
 # Map a Linux SONAME like "libfoo.so.N" to the default macOS dylib basename
 # "libfoo.N.dylib". Most libcommon SONAMEs follow this rule; explicit
 # overrides live in registry.toml's libs[].macos field.
@@ -315,6 +425,11 @@ assert_soname() {
 
   if is_macos; then
     assert_soname_macos "${expected}"
+    return
+  fi
+
+  if is_windows; then
+    assert_dll_windows "${expected}"
     return
   fi
 
@@ -384,4 +499,55 @@ assert_soname_macos() {
   fi
   log "verified dylib: ${expected}  →  lib/${mac_base}$([[ -L "${f}" ]] && echo " -> $(readlink "${f}")")"
   unset MACOS_SONAME_OVERRIDE
+}
+
+# Windows assertion. The "SONAME-equivalent" on PE is just the DLL basename.
+# Per-entry override comes from registry.toml's libs[].windows field which
+# the build script should pass via WINDOWS_DLL_OVERRIDE; otherwise we fall
+# back to mingw libtool's default naming: libfoo.so.N → libfoo-N.dll
+# (the libtool -current major maps to the version-suffix).
+assert_dll_windows() {
+  local expected="$1"
+  local bindir="${INSTALL_DIR}/bin"
+  local libdir="${INSTALL_DIR}/lib"
+  local override="${WINDOWS_DLL_OVERRIDE:-}"
+  unset WINDOWS_DLL_OVERRIDE
+
+  local candidates=()
+  if [[ -n "${override}" ]]; then
+    candidates+=("${override}")
+  else
+    # libfoo.so.N → libfoo-N.dll (autotools default).
+    if [[ "${expected}" =~ ^(.+)\.so\.([0-9]+)(\.[0-9.]+)?$ ]]; then
+      local stem="${BASH_REMATCH[1]}"
+      local major="${BASH_REMATCH[2]}"
+      candidates+=("${stem}-${major}.dll")
+      # cmake/meson sometimes drop the dash: libfoo.dll
+      candidates+=("${stem}.dll")
+    else
+      candidates+=("${expected%.so}.dll")
+    fi
+  fi
+
+  need_tool objdump
+  shopt -s nullglob
+  local found=""
+  for c in "${candidates[@]}"; do
+    if [[ -f "${bindir}/${c}" ]]; then
+      found="${bindir}/${c}"
+      break
+    fi
+  done
+  shopt -u nullglob
+
+  if [[ -z "${found}" ]]; then
+    log "ERROR: expected DLL for SONAME '${expected}' not found in ${bindir}"
+    log "  searched: ${candidates[*]}"
+    log "Present .dll files:"
+    shopt -s nullglob
+    for x in "${bindir}"/*.dll; do log "    ${x##*/}"; done
+    shopt -u nullglob
+    fatal "Windows DLL missing for ${expected}"
+  fi
+  log "verified DLL: ${expected}  →  bin/${found##*/}"
 }
