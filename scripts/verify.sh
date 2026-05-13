@@ -96,10 +96,18 @@ if libdir.is_dir():
             lines = [l.strip() for l in out.strip().splitlines() if l.strip()]
             # otool -D output: "path:\n<install_name>"
             install_name = lines[1] if len(lines) >= 2 else ""
-            # key = file basename; install_name should be @rpath/<basename>.
-            actual[name] = name
-            if install_name and install_name != f"@rpath/{name}":
-                print(f"⚠ {name}: install_name='{install_name}' (expected @rpath/{name})")
+            # Key by install_name basename (the SONAME-equivalent symlink
+            # name we canonicalize to in post_process_install_macos), not
+            # by the real fully-versioned filename. This matches what
+            # registry.toml expects (mapped from "libfoo.so.N" →
+            # "libfoo.N.dylib").
+            if install_name.startswith("@rpath/"):
+                key = install_name[len("@rpath/"):]
+            else:
+                key = name
+                if install_name:
+                    print(f"⚠ {name}: install_name='{install_name}' (expected @rpath/<name>)")
+            actual[key] = name
 
 label = "SONAMEs" if platform == "linux-x86_64" else "dylibs"
 print(f"── built {label} in install/lib ──")
