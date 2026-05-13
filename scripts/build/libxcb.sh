@@ -40,7 +40,7 @@ make install
 # in registry.toml and verify.sh would reject any that ship. Keep render+shm,
 # delete the rest.
 shopt -s nullglob
-KEEP_RE='libxcb-(render|shm)\.(so|[0-9]+\.dylib)'
+KEEP_RE='libxcb-(render|shm)\.'
 for f in "${INSTALL_DIR}/lib"/libxcb-*.so* \
          "${INSTALL_DIR}/lib"/libxcb-*.dylib; do
   base="$(basename "${f}")"
