@@ -70,7 +70,8 @@ source = "libunistring"
 
 [[libcommon.libs]]
 soname = "libidn2.so.0"
-status = "planned"
+status = "built"
+source = "libidn2"
 
 [[libcommon.libs]]
 soname = "libpcre2-8.so.0"
@@ -134,11 +135,13 @@ source = "libwebp"
 
 [[libcommon.libs]]
 soname = "libopenjp2.so.7"
-status = "planned"
+status = "built"
+source = "openjpeg"
 
 [[libcommon.libs]]
 soname = "liblcms2.so.2"
-status = "planned"
+status = "built"
+source = "lcms2"
 
 [[libcommon.libs]]
 soname = "libpixman-1.so.0"
@@ -148,7 +151,8 @@ source = "pixman"
 # 字体 / 文字排版
 [[libcommon.libs]]
 soname = "libfreetype.so.6"
-status = "planned"
+status = "built"
+source = "freetype"
 
 [[libcommon.libs]]
 soname = "libfontconfig.so.1"
@@ -176,7 +180,8 @@ source = "expat"
 
 [[libcommon.libs]]
 soname = "libxml2.so.2"
-status = "planned"
+status = "built"
+source = "libxml2"
 
 # 2D 绘图
 [[libcommon.libs]]
@@ -195,7 +200,8 @@ source = "libXau"
 
 [[libcommon.libs]]
 soname = "libXdmcp.so.6"
-status = "planned"
+status = "built"
+source = "libXdmcp"
 
 [[libcommon.libs]]
 soname = "libXext.so.6"
@@ -236,23 +242,28 @@ source = "libgomp"
 # glib 五件套
 [[libcommon.libs]]
 soname = "libglib-2.0.so.0"
-status = "planned"
+status = "built"
+source = "glib"
 
 [[libcommon.libs]]
 soname = "libgobject-2.0.so.0"
-status = "planned"
+status = "built"
+source = "glib"
 
 [[libcommon.libs]]
 soname = "libgmodule-2.0.so.0"
-status = "planned"
+status = "built"
+source = "glib"
 
 [[libcommon.libs]]
 soname = "libgthread-2.0.so.0"
-status = "planned"
+status = "built"
+source = "glib"
 
 [[libcommon.libs]]
 soname = "libgio-2.0.so.0"
-status = "planned"
+status = "built"
+source = "glib"
 
 # ────────────────────────────────────────────────────────────────────────────
 # 系统库（永不打包，由宿主 glibc / gcc-runtime 提供）

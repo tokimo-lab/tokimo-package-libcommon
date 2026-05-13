@@ -188,3 +188,59 @@ url = "https://ftp.gnu.org/gnu/libunistring/libunistring-1.2.tar.gz"
 sha256 = "fd6d5662fa706487c48349a758b57bc149ce94ec6c30624ec9fdc473ceabbc8e"
 layer = "L1"
 build = "libunistring"
+
+[[source]]
+name = "libXdmcp"
+version = "1.1.5"
+url = "https://www.x.org/releases/individual/lib/libXdmcp-1.1.5.tar.gz"
+sha256 = "31a7abc4f129dcf6f27ae912c3eedcb94d25ad2e8f317f69df6eda0bc4e4f2f3"
+layer = "L2"
+build = "libXdmcp"
+
+[[source]]
+name = "glib"
+version = "2.80.5"
+url = "https://download.gnome.org/sources/glib/2.80/glib-2.80.5.tar.xz"
+sha256 = "9f23a9de803c695bbfde7e37d6626b18b9a83869689dd79019bf3ae66c3e6771"
+layer = "L2"
+build = "glib"
+
+[[source]]
+name = "libidn2"
+version = "2.3.7"
+url = "https://ftp.gnu.org/gnu/libidn/libidn2-2.3.7.tar.gz"
+sha256 = "4c21a791b610b9519b9d0e12b8097bf2f359b12f8dd92647611a929e6bfd7d64"
+layer = "L2"
+build = "libidn2"
+
+[[source]]
+name = "lcms2"
+version = "2.16"
+url = "https://github.com/mm2/Little-CMS/releases/download/lcms2.16/lcms2-2.16.tar.gz"
+sha256 = "d873d34ad8b9b4cea010631f1a6228d2087475e4dc5e763eb81acc23d9d45a51"
+layer = "L2"
+build = "lcms2"
+
+[[source]]
+name = "openjpeg"
+version = "2.5.2"
+url = "https://github.com/uclouvain/openjpeg/archive/refs/tags/v2.5.2.tar.gz"
+sha256 = "90e3896fed910c376aaf79cdd98bdfdaf98c6472efd8e1debf0a854938cbda6a"
+layer = "L2"
+build = "openjpeg"
+
+[[source]]
+name = "freetype"
+version = "2.13.3"
+url = "https://download.savannah.gnu.org/releases/freetype/freetype-2.13.3.tar.xz"
+sha256 = "0550350666d427c74daeb85d5ac7bb353acba5f76956395995311a9c6f063289"
+layer = "L2"
+build = "freetype"
+
+[[source]]
+name = "libxml2"
+version = "2.13.5"
+url = "https://download.gnome.org/sources/libxml2/2.13/libxml2-2.13.5.tar.xz"
+sha256 = "74fc163217a3964257d3be39af943e08861263c4231f9ef5b496b6f6d4c7b2b6"
+layer = "L2"
+build = "libxml2"
