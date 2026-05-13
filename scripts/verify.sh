@@ -82,12 +82,16 @@ for item in reg["libcommon"]["libs"]:
     #   macos = "libfoo.5.dylib"   → explicit basename
     #   macos = "skip"             → skipped on macOS
     mac_field = item.get("macos")
+    linux_field = item.get("linux")
     if platform == "macos-arm64":
         if mac_field == "skip":
             skipped_sonames.add(soname)
             continue
         key = mac_field if isinstance(mac_field, str) else canonical_macos_basename(soname, libdir)
     else:
+        if linux_field == "skip":
+            skipped_sonames.add(soname)
+            continue
         key = soname
     if status == "built":
         expected[key] = soname

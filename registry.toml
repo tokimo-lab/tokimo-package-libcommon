@@ -139,6 +139,8 @@ source = "libwebp"
 soname = "libopenjp2.so.7"
 status = "built"
 source = "openjpeg"
+# macOS dylib version doesn't follow Linux SONAME major; pin explicit basename.
+macos = "libopenjp2.2.5.2.dylib"
 
 [[libcommon.libs]]
 soname = "liblcms2.so.2"
@@ -278,6 +280,15 @@ source = "glib"
 soname = "libgio-2.0.so.0"
 status = "built"
 source = "glib"
+
+# macOS only: glib's bundled proxy-libintl subproject (delegates to
+# CoreFoundation). On Linux gettext lives in glibc.
+[[libcommon.libs]]
+soname = "libintl.so.8"
+status = "built"
+source = "glib"
+linux = "skip"
+macos = "libintl.8.dylib"
 
 # ────────────────────────────────────────────────────────────────────────────
 # 系统库（永不打包，由宿主 glibc / gcc-runtime 提供）
