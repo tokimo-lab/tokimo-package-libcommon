@@ -223,36 +223,15 @@ post_process_install_macos() {
       *) continue ;;
     esac
 
-    local base id canonical
+    local base id
     base="$(basename "${f}")"
-    # Pick the SONAME-equivalent name: the shortest symlink in libdir that
-    # resolves to this real file. autotools convention is to ship
-    # libfoo.X.Y.Z.dylib as the real file and libfoo.<N>.dylib as a
-    # symlink (the soname-equivalent). Downstream linkers bake the
-    # install_name of the linked target into their LC_LOAD_DYLIB, so we
-    # want that install_name to be the stable major-version symlink, not
-    # the full minor-version filename.
-    canonical="${base}"
-    local sym sym_base shortest_len cur_len
-    shortest_len=${#base}
-    for sym in "${libdir}"/*.dylib; do
-      [[ -L "${sym}" ]] || continue
-      # readlink -f resolves the chain to the real file.
-      if [[ "$(readlink -f "${sym}" 2>/dev/null)" == "${f}" ]]; then
-        sym_base="$(basename "${sym}")"
-        cur_len=${#sym_base}
-        # Among version-bearing symlinks (libfoo.<N>.dylib), prefer the
-        # shortest — that's the bare major-version symlink, which is the
-        # SONAME equivalent. The fully-unversioned libfoo.dylib (no
-        # numeric component) is excluded by the regex; it's a dev
-        # symlink, not for runtime use.
-        if (( cur_len < shortest_len )) && [[ "${sym_base}" =~ \.[0-9]+\.dylib$ ]]; then
-          canonical="${sym_base}"
-          shortest_len=${cur_len}
-        fi
-      fi
-    done
-    id="@rpath/${canonical}"
+    # install_name uses the real file's basename. Heuristics that prefer
+    # a "soname-equivalent" symlink are fragile when the library name
+    # itself ends in a digit (e.g. libglib-2.0.0.dylib vs the dev symlink
+    # libglib-2.0.dylib). libcommon ships a coupled set of libs in one
+    # tarball, so consumers always see the same versioned basename and
+    # we don't need symlink indirection at install_name level.
+    id="@rpath/${base}"
 
     # 1. Set install_name.
     install_name_tool -id "${id}" "${f}" 2>/dev/null || \

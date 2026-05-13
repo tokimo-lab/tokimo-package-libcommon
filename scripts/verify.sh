@@ -41,10 +41,40 @@ def soname_to_macos_basename(soname: str) -> str:
         return soname[:-3] + ".dylib"
     return soname + ".dylib"
 
+def canonical_macos_basename(soname: str, libdir: Path) -> str:
+    """Resolve an Linux SONAME to its real-file basename on disk.
+
+    Build scripts install lib<X>.<V>.<minor>.dylib as the real file and
+    create lib<X>.<V>.dylib / lib<X>.dylib as symlinks. We want to key
+    by the real file's basename, since install_name is set to that.
+
+    If the real file is not yet on disk (planning-time call), fall back
+    to the naive soname_to_macos_basename.
+    """
+    m = re.match(r"^(.+)\.so\.([0-9.]+)$", soname)
+    if not m or not libdir.is_dir():
+        return soname_to_macos_basename(soname)
+    prefix = m.group(1)
+    major = m.group(2).split(".")[0]
+    # Real file must start with lib<X>.<MAJOR> and end with .dylib, and
+    # NOT be a symlink. Take the longest match (the fully-versioned real
+    # file).
+    candidates = []
+    for c in libdir.glob(f"{prefix}.{major}*.dylib"):
+        if c.is_symlink() or not c.is_file():
+            continue
+        candidates.append(c.name)
+    if candidates:
+        return max(candidates, key=len)
+    return soname_to_macos_basename(soname)
+
 # Build the platform-specific expected/planned/skip sets.
 expected = {}   # key -> soname  (key = soname on linux, dylib basename on macos)
 planned = set()
 skipped_sonames = set()
+
+libdir = repo_root / "install" / "lib"
+
 for item in reg["libcommon"]["libs"]:
     soname = item["soname"]
     status = item.get("status", "planned")
@@ -56,7 +86,7 @@ for item in reg["libcommon"]["libs"]:
         if mac_field == "skip":
             skipped_sonames.add(soname)
             continue
-        key = mac_field if isinstance(mac_field, str) else soname_to_macos_basename(soname)
+        key = mac_field if isinstance(mac_field, str) else canonical_macos_basename(soname, libdir)
     else:
         key = soname
     if status == "built":
@@ -66,7 +96,6 @@ for item in reg["libcommon"]["libs"]:
 
 excluded = set(reg.get("system_excluded", {}).get("linux", {}).get("sonames", []))
 
-libdir = repo_root / "install" / "lib"
 actual = {}  # key -> filename
 if libdir.is_dir():
     for f in sorted(libdir.iterdir()):
@@ -89,25 +118,20 @@ if libdir.is_dir():
         else:  # macos-arm64
             if not name.endswith(".dylib"):
                 continue
+            # Key actual[] by the real file's basename. install_name is
+            # set to @rpath/<basename> in post_process_install_macos, so
+            # name == install_name basename. Registry's expected keys are
+            # computed via canonical_macos_basename which globs install/lib
+            # for the same real file. They should match.
             try:
                 out = subprocess.check_output(["otool", "-D", str(f)], text=True)
             except subprocess.CalledProcessError:
-                continue
+                out = ""
             lines = [l.strip() for l in out.strip().splitlines() if l.strip()]
-            # otool -D output: "path:\n<install_name>"
             install_name = lines[1] if len(lines) >= 2 else ""
-            # Key by install_name basename (the SONAME-equivalent symlink
-            # name we canonicalize to in post_process_install_macos), not
-            # by the real fully-versioned filename. This matches what
-            # registry.toml expects (mapped from "libfoo.so.N" →
-            # "libfoo.N.dylib").
-            if install_name.startswith("@rpath/"):
-                key = install_name[len("@rpath/"):]
-            else:
-                key = name
-                if install_name:
-                    print(f"⚠ {name}: install_name='{install_name}' (expected @rpath/<name>)")
-            actual[key] = name
+            if install_name and not install_name.startswith("@rpath/"):
+                print(f"⚠ {name}: install_name='{install_name}' (expected @rpath/<name>)")
+            actual[name] = name
 
 label = "SONAMEs" if platform == "linux-x86_64" else "dylibs"
 print(f"── built {label} in install/lib ──")
