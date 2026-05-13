@@ -39,7 +39,10 @@ meson install -C "${build}"
 # libharfbuzz-gobject.so.0) depending on options. Registry only tracks
 # libharfbuzz.so.0 — drop the rest so verify.sh stays happy.
 shopt -s nullglob
-for f in "${INSTALL_DIR}/lib"/libharfbuzz-*.so*; do rm -f "${f}"; done
+for f in "${INSTALL_DIR}/lib"/libharfbuzz-*.so* \
+         "${INSTALL_DIR}/lib"/libharfbuzz-*.dylib; do
+  rm -f "${f}"
+done
 for pc in "${INSTALL_DIR}/lib/pkgconfig"/harfbuzz-*.pc; do rm -f "${pc}"; done
 shopt -u nullglob
 

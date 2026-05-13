@@ -33,10 +33,10 @@ log "installing"
 make install
 
 # Defensive: drop any decoder/demux that slipped through despite configure flags.
-rm -f "${INSTALL_DIR}/lib"/libwebpdemux.so* 2>/dev/null || true
-rm -f "${INSTALL_DIR}/lib"/libwebpdecoder.so* 2>/dev/null || true
-rm -f "${INSTALL_DIR}/lib/pkgconfig/libwebpdemux.pc" 2>/dev/null || true
-rm -f "${INSTALL_DIR}/lib/pkgconfig/libwebpdecoder.pc" 2>/dev/null || true
+drop_lib libwebpdemux
+drop_lib libwebpdecoder
+drop_pc libwebpdemux
+drop_pc libwebpdecoder
 
 log "post-processing"
 post_process_install

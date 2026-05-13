@@ -37,14 +37,10 @@ make install
 
 # gnutls also ships libgnutls-dane.so.0, libgnutlsxx.so.30 depending on flags.
 # Registry tracks libgnutls.so.30 only — drop siblings so verify.sh passes.
-shopt -s nullglob
-for f in "${INSTALL_DIR}/lib"/libgnutls-dane.so* "${INSTALL_DIR}/lib"/libgnutlsxx.so*; do
-  rm -f "${f}"
-done
-for pc in "${INSTALL_DIR}/lib/pkgconfig"/gnutls-dane.pc "${INSTALL_DIR}/lib/pkgconfig"/gnutlsxx.pc; do
-  rm -f "${pc}"
-done
-shopt -u nullglob
+drop_lib libgnutls-dane
+drop_lib libgnutlsxx
+drop_pc gnutls-dane
+drop_pc gnutlsxx
 
 log "post-processing"
 post_process_install

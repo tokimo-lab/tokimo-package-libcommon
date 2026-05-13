@@ -41,12 +41,10 @@ log "installing"
 meson install -C "${build}"
 
 # Drop sibling libs not tracked in registry.
-shopt -s nullglob
-for f in "${INSTALL_DIR}/lib"/libcairo-script-interpreter.so*; do rm -f "${f}"; done
-for f in "${INSTALL_DIR}/lib"/libcairo-gobject.so*; do rm -f "${f}"; done
-rm -f "${INSTALL_DIR}/lib/pkgconfig/cairo-script-interpreter.pc"
-rm -f "${INSTALL_DIR}/lib/pkgconfig/cairo-gobject.pc"
-shopt -u nullglob
+drop_lib libcairo-script-interpreter
+drop_lib libcairo-gobject
+drop_pc cairo-script-interpreter
+drop_pc cairo-gobject
 
 log "post-processing"
 post_process_install

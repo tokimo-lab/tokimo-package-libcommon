@@ -25,7 +25,7 @@ log "refreshing libtasn1 (patchelf 0.17.2 idempotency workaround)"
 bash "$(dirname "${BASH_SOURCE[0]}")/libtasn1.sh"
 
 log "configuring (meson)"
-CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS} -Wl,-z,noseparate-code" \
+CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
   meson setup "${build}" "${src}" \
     --prefix="${INSTALL_DIR}" \
     --libdir=lib \

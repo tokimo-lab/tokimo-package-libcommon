@@ -52,9 +52,9 @@ rm -rf "${INSTALL_DIR}/bin/gio"* \
 # glib 2.80 unconditionally ships libgirepository-2.0 (split out from the
 # gobject-introspection project upstream). It is NOT in libcommon's registry
 # and would fail verify.sh. Drop the library + its pkg-config + headers.
-rm -f "${INSTALL_DIR}/lib"/libgirepository-2.0.so* 2>/dev/null || true
 rm -f "${INSTALL_DIR}/lib"/libgirepository-2.0.* 2>/dev/null || true
-rm -f "${INSTALL_DIR}/lib/pkgconfig/girepository-2.0.pc" 2>/dev/null || true
+drop_lib libgirepository-2.0
+drop_pc girepository-2.0
 rm -rf "${INSTALL_DIR}/include/girepository-2.0" 2>/dev/null || true
 
 log "post-processing"

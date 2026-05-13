@@ -19,7 +19,7 @@ export ACLOCAL_PATH="${extra_aclocal#:}${ACLOCAL_PATH:+:${ACLOCAL_PATH}}"
 log "configuring (ACLOCAL_PATH=${ACLOCAL_PATH})"
 cd "${build}"
 PYTHON=python3 \
-CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS} -Wl,-z,noseparate-code" \
+CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
   "${src}/configure" \
     --prefix="${INSTALL_DIR}" \
     --libdir="${INSTALL_DIR}/lib" \
@@ -40,8 +40,9 @@ make install
 # in registry.toml and verify.sh would reject any that ship. Keep render+shm,
 # delete the rest.
 shopt -s nullglob
-KEEP_RE='libxcb-(render|shm)\.so'
-for f in "${INSTALL_DIR}/lib"/libxcb-*.so*; do
+KEEP_RE='libxcb-(render|shm)\.(so|[0-9]+\.dylib)'
+for f in "${INSTALL_DIR}/lib"/libxcb-*.so* \
+         "${INSTALL_DIR}/lib"/libxcb-*.dylib; do
   base="$(basename "${f}")"
   if [[ "${base}" =~ ${KEEP_RE} ]]; then
     continue

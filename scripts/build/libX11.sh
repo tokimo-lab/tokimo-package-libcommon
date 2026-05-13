@@ -39,10 +39,8 @@ make install
 # Registry tracks libX11.so.6 only. libX11-xcb.so.1 is an optional XCB-bridge
 # helper not (yet) listed in registry.toml — drop it and its .pc so verify.sh
 # doesn't flag an unregistered SONAME.
-shopt -s nullglob
-for f in "${INSTALL_DIR}/lib"/libX11-xcb.so*; do rm -f "${f}"; done
-rm -f "${INSTALL_DIR}/lib/pkgconfig/x11-xcb.pc"
-shopt -u nullglob
+drop_lib libX11-xcb
+drop_pc x11-xcb
 
 log "post-processing"
 post_process_install

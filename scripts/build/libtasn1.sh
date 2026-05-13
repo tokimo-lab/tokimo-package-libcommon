@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # libtasn1 4.20.0 — autotools.
 #
-# Linker workaround: pass -Wl,-z,noseparate-code so binutils 2.41 emits a
+# Linker workaround: pass so binutils 2.41 emits a
 # segment layout that patchelf 0.17.2 can later modify without producing
 # unaligned LOAD entries. Without this, post_process_install's patchelf pass
 # breaks the file (objdump still reports SONAME, but glibc refuses to load
@@ -16,7 +16,7 @@ build="$(prepare_build_dir libtasn1)"
 
 log "configuring"
 cd "${build}"
-CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS} -Wl,-z,noseparate-code" \
+CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
   "${src}/configure" \
     --prefix="${INSTALL_DIR}" \
     --libdir="${INSTALL_DIR}/lib" \

@@ -8,7 +8,7 @@ build="$(prepare_build_dir fontconfig)"
 
 log "configuring"
 cd "${build}"
-CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS} -Wl,-z,noseparate-code" \
+CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
   "${src}/configure" \
     --prefix="${INSTALL_DIR}" \
     --libdir="${INSTALL_DIR}/lib" \

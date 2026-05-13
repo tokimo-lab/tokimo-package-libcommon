@@ -25,8 +25,9 @@ log "installing"
 cmake --install "${build}"
 
 # Drop encoder — not part of libcommon's exported surface.
-rm -f "${INSTALL_DIR}/lib"/libbrotlienc.so* "${INSTALL_DIR}/lib"/libbrotlienc.a 2>/dev/null || true
-rm -f "${INSTALL_DIR}/lib/pkgconfig/libbrotlienc.pc" 2>/dev/null || true
+rm -f "${INSTALL_DIR}/lib"/libbrotlienc.a 2>/dev/null || true
+drop_lib libbrotlienc
+drop_pc libbrotlienc
 
 log "post-processing"
 post_process_install

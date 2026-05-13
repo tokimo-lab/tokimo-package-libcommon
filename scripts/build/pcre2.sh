@@ -26,8 +26,8 @@ make install
 
 # pcre2 always builds the POSIX wrapper libpcre2-posix when --enable-pcre2-8
 # is set. It's not in libcommon registry — drop it.
-rm -f "${INSTALL_DIR}/lib"/libpcre2-posix.so* 2>/dev/null || true
-rm -f "${INSTALL_DIR}/lib/pkgconfig/libpcre2-posix.pc" 2>/dev/null || true
+drop_lib libpcre2-posix
+drop_pc libpcre2-posix
 
 log "post-processing"
 post_process_install
