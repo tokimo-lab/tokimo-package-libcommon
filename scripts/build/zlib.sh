@@ -21,6 +21,19 @@ make -j"${NPROC}"
 log "installing"
 make install
 
+if is_macos; then
+  # zlib's macOS install rule only copies libz.<full-version>.dylib;
+  # recreate the libz.dylib / libz.1.dylib symlinks we need.
+  cd "${INSTALL_DIR}/lib"
+  full=$(ls libz.*.dylib 2>/dev/null | grep -E '^libz\.[0-9.]+\.dylib$' | head -1)
+  if [[ -n "${full}" ]]; then
+    rm -f libz.dylib libz.1.dylib
+    ln -s "${full}" libz.1.dylib
+    ln -s "${full}" libz.dylib
+  fi
+  cd "${build}"
+fi
+
 log "post-processing"
 post_process_install
 
