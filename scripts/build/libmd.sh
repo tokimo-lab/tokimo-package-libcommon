@@ -8,6 +8,11 @@ if is_macos; then
   exit 0
 fi
 
+if is_windows; then
+  log "libmd not built on Windows (consumer libbsd skipped on Windows)"
+  exit 0
+fi
+
 src="$(source_dir libmd)"
 build="$(prepare_build_dir libmd)"
 

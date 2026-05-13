@@ -4,6 +4,11 @@
 LIB_NAME="libXrender"
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
+if is_windows; then
+  log "skipping on Windows (X11 family not supported)"
+  exit 0
+fi
+
 src="$(source_dir libXrender)"
 build="$(prepare_build_dir libXrender)"
 

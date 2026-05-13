@@ -8,6 +8,11 @@ if is_macos; then
   exit 0
 fi
 
+if is_windows; then
+  log "libbsd not built on Windows (consumers libX11/libxcb skipped on Windows)"
+  exit 0
+fi
+
 src="$(source_dir libbsd)"
 build="$(prepare_build_dir libbsd)"
 

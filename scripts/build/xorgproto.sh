@@ -4,6 +4,11 @@
 LIB_NAME="xorgproto"
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
+if is_windows; then
+  log "skipping on Windows (X11 family not supported)"
+  exit 0
+fi
+
 need_tool meson
 need_tool ninja
 
