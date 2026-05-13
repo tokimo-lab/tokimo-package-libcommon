@@ -11,6 +11,12 @@ on:
 permissions:
   contents: write  # softprops/action-gh-release on tag push
 
+env:
+  # mingw Python defaults to cp1252 stdout; force utf-8 so our scripts
+  # can print unicode arrows / box chars without UnicodeEncodeError.
+  PYTHONIOENCODING: utf-8
+  PYTHONUTF8: '1'
+
 jobs:
   build:
     name: build-${{ matrix.platform }}
