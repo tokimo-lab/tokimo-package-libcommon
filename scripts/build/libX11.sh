@@ -31,10 +31,22 @@ CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
     --without-xsltproc
 
 log "building"
-make -j"${NPROC}"
+# X11's nls/ rules pipe iso-8859 Compose files through `sed` to build
+# locale.alias. macOS BSD sed in the default UTF-8 locale aborts on
+# non-UTF-8 bytes ("RE error: illegal byte sequence"). Force the C
+# locale for the whole make so every sed sees raw bytes.
+if is_macos; then
+  LC_ALL=C LANG=C make -j"${NPROC}"
+else
+  make -j"${NPROC}"
+fi
 
 log "installing"
-make install
+if is_macos; then
+  LC_ALL=C LANG=C make install
+else
+  make install
+fi
 
 # Registry tracks libX11.so.6 only. libX11-xcb.so.1 is an optional XCB-bridge
 # helper not (yet) listed in registry.toml — drop it and its .pc so verify.sh
