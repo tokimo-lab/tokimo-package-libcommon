@@ -9,12 +9,28 @@ cd "${REPO_ROOT}"
 
 HOST_OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 HOST_ARCH="$(uname -m)"
-PLATFORM="${HOST_OS}-${HOST_ARCH}"
+case "${HOST_OS}-${HOST_ARCH}" in
+  linux-x86_64) PLATFORM="linux-x86_64"; SHLIB_GLOB='install/lib/*.so*'; INSPECT="objdump_soname" ;;
+  darwin-arm64) PLATFORM="macos-arm64"; SHLIB_GLOB='install/lib/*.dylib'; INSPECT="otool_id" ;;
+  *) echo "FATAL: platform ${HOST_OS}-${HOST_ARCH} not supported" >&2; exit 1 ;;
+esac
 
 [[ -d install ]] || { echo "FATAL: install/ does not exist; run build-all.sh first" >&2; exit 1; }
 
 VERSION="${VERSION:-${GITHUB_REF_NAME:-dev}}"
 ARTIFACT="install-${PLATFORM}.tar.zst"
+
+inspect_id() {
+  local f="$1"
+  case "${INSPECT}" in
+    objdump_soname)
+      objdump -p "${f}" 2>/dev/null | awk '/SONAME/ {print $2; exit}' || true
+      ;;
+    otool_id)
+      otool -D "${f}" 2>/dev/null | tail -n +2 | head -1 | tr -d ' ' || true
+      ;;
+  esac
+}
 
 # Generate META.txt.
 {
@@ -24,13 +40,13 @@ ARTIFACT="install-${PLATFORM}.tar.zst"
   echo "built_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "git_sha: $(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
   echo ""
-  echo "── SONAMEs ──"
+  echo "── shared libs ──"
   shopt -s nullglob
-  for f in install/lib/*.so*; do
+  for f in ${SHLIB_GLOB}; do
     [[ -L "${f}" ]] && continue
     [[ -f "${f}" ]] || continue
-    s="$(objdump -p "${f}" 2>/dev/null | awk '/SONAME/ {print $2; exit}')" || true
-    [[ -n "${s}" ]] && echo "${s}    ${f#install/}"
+    id="$(inspect_id "${f}")"
+    [[ -n "${id}" ]] && echo "${id}    ${f#install/}"
   done
   shopt -u nullglob
 } > install/META.txt
