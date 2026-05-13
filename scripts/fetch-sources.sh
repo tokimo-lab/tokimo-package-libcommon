@@ -99,6 +99,12 @@ for entry in data.get("source", []):
     want_sha = entry["sha256"]
     layer = entry.get("layer", "?")
 
+    # Entries with empty url have no upstream tarball (e.g. libgomp, copied
+    # from the system GCC runtime). Skip the fetch/extract phase entirely.
+    if not url:
+        print(f"[fetch] {name} {version}  ({layer})  → no url, skipping")
+        continue
+
     ext = ".tar.gz"
     for cand in (".tar.xz", ".tar.gz", ".tgz", ".tar.bz2", ".tar.zst"):
         if url.endswith(cand):

@@ -34,3 +34,133 @@ url = "https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.
 sha256 = "eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3"
 layer = "L0"
 build = "zstd"
+
+[[source]]
+name = "lz4"
+version = "1.10.0"
+url = "https://github.com/lz4/lz4/archive/refs/tags/v1.10.0.tar.gz"
+sha256 = "537512904744b35e232912055ccf8ec66d768639ff3abe5788d90d792ec5f48b"
+layer = "L0"
+build = "lz4"
+
+[[source]]
+name = "brotli"
+version = "1.1.0"
+url = "https://github.com/google/brotli/archive/refs/tags/v1.1.0.tar.gz"
+sha256 = "e720a6ca29428b803f4ad165371771f5398faba397edf6778837a18599ea13ff"
+layer = "L0"
+build = "brotli"
+
+[[source]]
+name = "gmp"
+version = "6.3.0"
+url = "https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz"
+sha256 = "a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898"
+layer = "L0"
+build = "gmp"
+
+[[source]]
+name = "libmd"
+version = "1.1.0"
+url = "https://archive.hadrons.org/software/libmd/libmd-1.1.0.tar.xz"
+sha256 = "1bd6aa42275313af3141c7cf2e5b964e8b1fd488025caf2f971f43b00776b332"
+layer = "L0"
+build = "libmd"
+
+[[source]]
+name = "libffi"
+version = "3.4.6"
+url = "https://github.com/libffi/libffi/releases/download/v3.4.6/libffi-3.4.6.tar.gz"
+sha256 = "b0dea9df23c863a7a50e825440f3ebffabd65df1497108e5d437747843895a4e"
+layer = "L0"
+build = "libffi"
+
+[[source]]
+name = "pcre2"
+version = "10.44"
+url = "https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.44/pcre2-10.44.tar.bz2"
+sha256 = "d34f02e113cf7193a1ebf2770d3ac527088d485d4e047ed10e5d217c6ef5de96"
+layer = "L0"
+build = "pcre2"
+
+[[source]]
+name = "icu"
+version = "74.2"
+url = "https://github.com/unicode-org/icu/releases/download/release-74-2/icu4c-74_2-src.tgz"
+sha256 = "68db082212a96d6f53e35d60f47d38b962e9f9d207a74cfac78029ae8ff5e08c"
+layer = "L0"
+build = "icu"
+
+[[source]]
+name = "libwebp"
+version = "1.4.0"
+url = "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.4.0.tar.gz"
+sha256 = "61f873ec69e3be1b99535634340d5bde750b2e4447caa1db9f61be3fd49ab1e5"
+layer = "L0"
+build = "libwebp"
+
+[[source]]
+name = "expat"
+version = "2.6.4"
+url = "https://github.com/libexpat/libexpat/releases/download/R_2_6_4/expat-2.6.4.tar.xz"
+sha256 = "a695629dae047055b37d50a0ff4776d1d45d0a4c842cf4ccee158441f55ff7ee"
+layer = "L0"
+build = "expat"
+
+[[source]]
+name = "libXau"
+version = "1.0.11"
+url = "https://www.x.org/releases/individual/lib/libXau-1.0.11.tar.gz"
+sha256 = "3a321aaceb803577a4776a5efe78836eb095a9e44bbc7a465d29463e1a14f189"
+layer = "L0"
+build = "libXau"
+
+[[source]]
+name = "pixman"
+version = "0.43.4"
+url = "https://www.cairographics.org/releases/pixman-0.43.4.tar.gz"
+sha256 = "a0624db90180c7ddb79fc7a9151093dc37c646d8c38d3f232f767cf64b85a226"
+layer = "L0"
+build = "pixman"
+
+[[source]]
+name = "graphite2"
+version = "1.3.14"
+url = "https://github.com/silnrsi/graphite/releases/download/1.3.14/graphite2-1.3.14.tgz"
+sha256 = "f99d1c13aa5fa296898a181dff9b82fb25f6cc0933dbaa7a475d8109bd54209d"
+layer = "L0"
+build = "graphite2"
+
+[[source]]
+name = "fribidi"
+version = "1.0.16"
+url = "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz"
+sha256 = "1b1cde5b235d40479e91be2f0e88a309e3214c8ab470ec8a2744d82a5a9ea05c"
+layer = "L0"
+build = "fribidi"
+
+# libgomp ships with the GCC runtime — no tarball, copied from /usr/lib64.
+# fetch-sources.sh skips entries whose `url` is empty.
+[[source]]
+name = "libgomp"
+version = "14"
+url = ""
+sha256 = ""
+layer = "L0"
+build = "libgomp"
+
+[[source]]
+name = "libtasn1"
+version = "4.20.0"
+url = "https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.20.0.tar.gz"
+sha256 = "92e0e3bd4c02d4aeee76036b2ddd83f0c732ba4cda5cb71d583272b23587a76c"
+layer = "L0"
+build = "libtasn1"
+
+[[source]]
+name = "nettle"
+version = "3.10"
+url = "https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz"
+sha256 = "b4c518adb174e484cb4acea54118f02380c7133771e7e9beb98a0787194ee47c"
+layer = "L0"
+build = "nettle"

@@ -34,7 +34,8 @@ source = "xz"
 
 [[libcommon.libs]]
 soname = "liblz4.so.1"
-status = "planned"
+status = "built"
+source = "lz4"
 
 [[libcommon.libs]]
 soname = "libzstd.so.1"
@@ -43,20 +44,24 @@ source = "zstd"
 
 [[libcommon.libs]]
 soname = "libbrotlicommon.so.1"
-status = "planned"
+status = "built"
+source = "brotli"
 
 [[libcommon.libs]]
 soname = "libbrotlidec.so.1"
-status = "planned"
+status = "built"
+source = "brotli"
 
 # 字符集 / 国际化 / 文本
 [[libcommon.libs]]
 soname = "libicudata.so.74"
-status = "planned"
+status = "built"
+source = "icu"
 
 [[libcommon.libs]]
 soname = "libicuuc.so.74"
-status = "planned"
+status = "built"
+source = "icu"
 
 [[libcommon.libs]]
 soname = "libunistring.so.5"
@@ -68,20 +73,24 @@ status = "planned"
 
 [[libcommon.libs]]
 soname = "libpcre2-8.so.0"
-status = "planned"
+status = "built"
+source = "pcre2"
 
 # 加密 / TLS / GMP
 [[libcommon.libs]]
 soname = "libgmp.so.10"
-status = "planned"
+status = "built"
+source = "gmp"
 
 [[libcommon.libs]]
 soname = "libnettle.so.8"
-status = "planned"
+status = "built"
+source = "nettle"
 
 [[libcommon.libs]]
 soname = "libhogweed.so.6"
-status = "planned"
+status = "built"
+source = "nettle"
 
 [[libcommon.libs]]
 soname = "libgnutls.so.30"
@@ -89,7 +98,8 @@ status = "planned"
 
 [[libcommon.libs]]
 soname = "libtasn1.so.6"
-status = "planned"
+status = "built"
+source = "libtasn1"
 
 [[libcommon.libs]]
 soname = "libp11-kit.so.0"
@@ -97,7 +107,8 @@ status = "planned"
 
 [[libcommon.libs]]
 soname = "libffi.so.8"
-status = "planned"
+status = "built"
+source = "libffi"
 
 # 图像基础
 [[libcommon.libs]]
@@ -106,15 +117,18 @@ status = "planned"
 
 [[libcommon.libs]]
 soname = "libwebp.so.7"
-status = "planned"
+status = "built"
+source = "libwebp"
 
 [[libcommon.libs]]
 soname = "libwebpmux.so.3"
-status = "planned"
+status = "built"
+source = "libwebp"
 
 [[libcommon.libs]]
 soname = "libsharpyuv.so.0"
-status = "planned"
+status = "built"
+source = "libwebp"
 
 [[libcommon.libs]]
 soname = "libopenjp2.so.7"
@@ -126,7 +140,8 @@ status = "planned"
 
 [[libcommon.libs]]
 soname = "libpixman-1.so.0"
-status = "planned"
+status = "built"
+source = "pixman"
 
 # 字体 / 文字排版
 [[libcommon.libs]]
@@ -143,16 +158,19 @@ status = "planned"
 
 [[libcommon.libs]]
 soname = "libgraphite2.so.3"
-status = "planned"
+status = "built"
+source = "graphite2"
 
 [[libcommon.libs]]
 soname = "libfribidi.so.0"
-status = "planned"
+status = "built"
+source = "fribidi"
 
 # XML / 配置
 [[libcommon.libs]]
 soname = "libexpat.so.1"
-status = "planned"
+status = "built"
+source = "expat"
 
 [[libcommon.libs]]
 soname = "libxml2.so.2"
@@ -170,7 +188,8 @@ status = "planned"
 
 [[libcommon.libs]]
 soname = "libXau.so.6"
-status = "planned"
+status = "built"
+source = "libXau"
 
 [[libcommon.libs]]
 soname = "libXdmcp.so.6"
@@ -203,11 +222,13 @@ status = "planned"
 
 [[libcommon.libs]]
 soname = "libmd.so.0"
-status = "planned"
+status = "built"
+source = "libmd"
 
 [[libcommon.libs]]
 soname = "libgomp.so.1"
-status = "planned"
+status = "built"
+source = "libgomp"
 
 # glib 五件套
 [[libcommon.libs]]
