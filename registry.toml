@@ -9,131 +9,162 @@
 #   "built"   — 当前 release 已实际产出该 SONAME，CI 会校验存在性
 #   "planned" — 计划纳入，尚未在当前 release 出现，CI 跳过校验
 #
+# 平台 column（linux / macos / windows）：
+#   <basename>  — 该平台的实际文件 basename（macOS = dylib，Windows = DLL）
+#   "skip"      — 该平台不构建该 entry（如 X11 family / BSD-only libs on Windows）
+#   缺省          — 使用平台默认推导：
+#                  Linux:   key = soname
+#                  macOS:   libfoo.so.N → libfoo.N.dylib
+#                  Windows: libfoo.so.N → libfoo-N.dll (mingw libtool default)
+#
 # 修改流程：动 SONAME 归属必须先改本文件 + bump libcommon major，再依次 rebuild 三仓。
 
 schema_version = 1
 
 # ────────────────────────────────────────────────────────────────────────────
-# libcommon — 49 个共享底座 SONAME
-# 当前 release: v0.2.0 — 49 / 49 built
+# libcommon — 49 个共享底座 SONAME（Linux/macOS）+ 3 个 Windows toolchain runtime DLL
+# 当前 release: v1.0.0 — 三平台 (linux-x86_64 / macos-arm64 / windows-x86_64)
 # ────────────────────────────────────────────────────────────────────────────
 [libcommon]
-version = "0.3.0"
-platforms = ["linux-x86_64", "macos-arm64"]
+version = "1.0.0"
+platforms = ["linux-x86_64", "macos-arm64", "windows-x86_64"]
 
 # 基础压缩 / 编码
 [[libcommon.libs]]
 soname = "libz.so.1"
 status = "built"
 source = "zlib"
+# zlib's own configure produces zlib1.dll on win32 (not libz-1.dll).
+windows = "zlib1.dll"
 
 [[libcommon.libs]]
 soname = "liblzma.so.5"
 status = "built"
 source = "xz"
+windows = "liblzma-5.dll"
 
 [[libcommon.libs]]
 soname = "liblz4.so.1"
 status = "built"
 source = "lz4"
+windows = "liblz4.dll"
 
 [[libcommon.libs]]
 soname = "libzstd.so.1"
 status = "built"
 source = "zstd"
+windows = "libzstd.dll"
 
 [[libcommon.libs]]
 soname = "libbrotlicommon.so.1"
 status = "built"
 source = "brotli"
+windows = "libbrotlicommon.dll"
 
 [[libcommon.libs]]
 soname = "libbrotlidec.so.1"
 status = "built"
 source = "brotli"
+windows = "libbrotlidec.dll"
 
 # 字符集 / 国际化 / 文本
 [[libcommon.libs]]
 soname = "libicudata.so.74"
 status = "built"
 source = "icu"
+windows = "libicudt74.dll"
 
 [[libcommon.libs]]
 soname = "libicuuc.so.74"
 status = "built"
 source = "icu"
+windows = "libicuuc74.dll"
 
 [[libcommon.libs]]
 soname = "libunistring.so.5"
 status = "built"
 source = "libunistring"
+windows = "libunistring-5.dll"
 
 [[libcommon.libs]]
 soname = "libidn2.so.0"
 status = "built"
 source = "libidn2"
+windows = "libidn2-0.dll"
 
 [[libcommon.libs]]
 soname = "libpcre2-8.so.0"
 status = "built"
 source = "pcre2"
+windows = "libpcre2-8-0.dll"
 
 # 加密 / TLS / GMP
 [[libcommon.libs]]
 soname = "libgmp.so.10"
 status = "built"
 source = "gmp"
+windows = "libgmp-10.dll"
 
 [[libcommon.libs]]
 soname = "libnettle.so.8"
 status = "built"
 source = "nettle"
+windows = "libnettle-8.dll"
 
 [[libcommon.libs]]
 soname = "libhogweed.so.6"
 status = "built"
 source = "nettle"
+windows = "libhogweed-6.dll"
 
 [[libcommon.libs]]
 soname = "libgnutls.so.30"
 status = "built"
 source = "gnutls"
+windows = "libgnutls-30.dll"
 
 [[libcommon.libs]]
 soname = "libtasn1.so.6"
 status = "built"
 source = "libtasn1"
+windows = "libtasn1-6.dll"
 
 [[libcommon.libs]]
 soname = "libp11-kit.so.0"
 status = "built"
 source = "p11-kit"
+windows = "libp11-kit-0.dll"
 
 [[libcommon.libs]]
 soname = "libffi.so.8"
 status = "built"
 source = "libffi"
+windows = "libffi-8.dll"
 
 # 图像基础
 [[libcommon.libs]]
 soname = "libpng16.so.16"
 status = "built"
 source = "libpng"
+windows = "libpng16-16.dll"
 
 [[libcommon.libs]]
 soname = "libwebp.so.7"
 status = "built"
 source = "libwebp"
+windows = "libwebp-7.dll"
 
 [[libcommon.libs]]
 soname = "libwebpmux.so.3"
 status = "built"
 source = "libwebp"
+windows = "libwebpmux-3.dll"
 
 [[libcommon.libs]]
 soname = "libsharpyuv.so.0"
 status = "built"
 source = "libwebp"
+windows = "libsharpyuv-0.dll"
 
 [[libcommon.libs]]
 soname = "libopenjp2.so.7"
@@ -141,100 +172,121 @@ status = "built"
 source = "openjpeg"
 # macOS dylib version doesn't follow Linux SONAME major; pin explicit basename.
 macos = "libopenjp2.2.5.2.dylib"
+windows = "libopenjp2.dll"
 
 [[libcommon.libs]]
 soname = "liblcms2.so.2"
 status = "built"
 source = "lcms2"
+windows = "liblcms2-2.dll"
 
 [[libcommon.libs]]
 soname = "libpixman-1.so.0"
 status = "built"
 source = "pixman"
+windows = "libpixman-1-0.dll"
 
 # 字体 / 文字排版
 [[libcommon.libs]]
 soname = "libfreetype.so.6"
 status = "built"
 source = "freetype"
+windows = "libfreetype-6.dll"
 
 [[libcommon.libs]]
 soname = "libfontconfig.so.1"
 status = "built"
 source = "fontconfig"
+windows = "libfontconfig-1.dll"
 
 [[libcommon.libs]]
 soname = "libharfbuzz.so.0"
 status = "built"
 source = "harfbuzz"
+windows = "libharfbuzz-0.dll"
 
 [[libcommon.libs]]
 soname = "libgraphite2.so.3"
 status = "built"
 source = "graphite2"
+windows = "libgraphite2.dll"
 
 [[libcommon.libs]]
 soname = "libfribidi.so.0"
 status = "built"
 source = "fribidi"
+windows = "libfribidi-0.dll"
 
 # XML / 配置
 [[libcommon.libs]]
 soname = "libexpat.so.1"
 status = "built"
 source = "expat"
+windows = "libexpat-1.dll"
 
 [[libcommon.libs]]
 soname = "libxml2.so.2"
 status = "built"
 source = "libxml2"
+windows = "libxml2-2.dll"
 
 # 2D 绘图
 [[libcommon.libs]]
 soname = "libcairo.so.2"
 status = "built"
 source = "cairo"
+windows = "libcairo-2.dll"
 
-# X11 / XCB
+# X11 / XCB — 仅 Linux/macOS。Windows 上整个 X11 family 都 skip：
+# mingw 头文件不带 X11/Xlib.h；cairo 在 Windows 禁用 xlib backend，
+# 改用 win32 backend (cairo_win32_surface_t)。
 [[libcommon.libs]]
 soname = "libX11.so.6"
 status = "built"
 source = "libX11"
+windows = "skip"
 
 [[libcommon.libs]]
 soname = "libXau.so.6"
 status = "built"
 source = "libXau"
+windows = "skip"
 
 [[libcommon.libs]]
 soname = "libXdmcp.so.6"
 status = "built"
 source = "libXdmcp"
+windows = "skip"
 
 [[libcommon.libs]]
 soname = "libXext.so.6"
 status = "built"
 source = "libXext"
+windows = "skip"
 
 [[libcommon.libs]]
 soname = "libXrender.so.1"
 status = "built"
 source = "libXrender"
+windows = "skip"
 
 [[libcommon.libs]]
 soname = "libxcb.so.1"
 status = "built"
 source = "libxcb"
+windows = "skip"
 
 [[libcommon.libs]]
 soname = "libxcb-render.so.0"
 status = "built"
 source = "libxcb"
+windows = "skip"
 
 [[libcommon.libs]]
 soname = "libxcb-shm.so.0"
 status = "built"
 source = "libxcb"
+windows = "skip"
 
 # 杂项 unix
 [[libcommon.libs]]
@@ -242,57 +294,103 @@ soname = "libbsd.so.0"
 status = "built"
 source = "libbsd"
 macos = "skip"
+windows = "skip"
 
 [[libcommon.libs]]
 soname = "libmd.so.0"
 status = "built"
 source = "libmd"
 macos = "skip"
+windows = "skip"
 
+# libgomp: Linux 从系统 gcc 拷贝 libgomp.so.1；macOS 跳过（Apple Clang 用 libomp）；
+# Windows 从 mingw toolchain (/mingw64/bin/libgomp-1.dll) 拷贝。
 [[libcommon.libs]]
 soname = "libgomp.so.1"
 status = "built"
 source = "libgomp"
 macos = "skip"
+windows = "libgomp-1.dll"
 
 # glib 五件套
 [[libcommon.libs]]
 soname = "libglib-2.0.so.0"
 status = "built"
 source = "glib"
+windows = "libglib-2.0-0.dll"
 
 [[libcommon.libs]]
 soname = "libgobject-2.0.so.0"
 status = "built"
 source = "glib"
+windows = "libgobject-2.0-0.dll"
 
 [[libcommon.libs]]
 soname = "libgmodule-2.0.so.0"
 status = "built"
 source = "glib"
+windows = "libgmodule-2.0-0.dll"
 
 [[libcommon.libs]]
 soname = "libgthread-2.0.so.0"
 status = "built"
 source = "glib"
+windows = "libgthread-2.0-0.dll"
 
 [[libcommon.libs]]
 soname = "libgio-2.0.so.0"
 status = "built"
 source = "glib"
+windows = "libgio-2.0-0.dll"
 
 # macOS only: glib's bundled proxy-libintl subproject (delegates to
-# CoreFoundation). On Linux gettext lives in glibc.
+# CoreFoundation). On Linux gettext lives in glibc. On Windows glib bundles
+# proxy-libintl as well but we have not yet wired it; skip until needed.
 [[libcommon.libs]]
 soname = "libintl.so.8"
 status = "built"
 source = "glib"
 linux = "skip"
 macos = "libintl.8.dylib"
+windows = "skip"
+
+# ────────────────────────────────────────────────────────────────────────────
+# Windows-only entries: mingw-w64 toolchain runtime DLLs.
+#
+# 这些 DLL 由 msys2 mingw-w64-x86_64-gcc 工具链提供，**不从源码 build**，
+# 由 libgomp.sh 调用 ship_mingw_runtime() 从 /mingw64/bin/ 拷贝到 install/bin/。
+# 在 Linux/macOS 上对应的功能位于 glibc / libSystem，故标 skip。
+# ────────────────────────────────────────────────────────────────────────────
+
+[[libcommon.libs]]
+soname = "libgcc_s_seh-1.dll"
+status = "built"
+source = "mingw-runtime"
+linux = "skip"
+macos = "skip"
+windows = "libgcc_s_seh-1.dll"
+
+[[libcommon.libs]]
+soname = "libstdc++-6.dll"
+status = "built"
+source = "mingw-runtime"
+linux = "skip"
+macos = "skip"
+windows = "libstdc++-6.dll"
+
+[[libcommon.libs]]
+soname = "libwinpthread-1.dll"
+status = "built"
+source = "mingw-runtime"
+linux = "skip"
+macos = "skip"
+windows = "libwinpthread-1.dll"
 
 # ────────────────────────────────────────────────────────────────────────────
 # 系统库（永不打包，由宿主 glibc / gcc-runtime 提供）
 # CI 检查时若发现这些 SONAME 出现在任何包内 → 报错。
+# Windows 系统 DLL allowlist 在 scripts/verify.sh 内（kernel32 / user32 / ws2_32 /
+# crypt32 / bcrypt 等 Win32 API）。
 # ────────────────────────────────────────────────────────────────────────────
 [system_excluded.linux]
 sonames = [
