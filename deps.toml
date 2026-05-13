@@ -164,3 +164,27 @@ url = "https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz"
 sha256 = "b4c518adb174e484cb4acea54118f02380c7133771e7e9beb98a0787194ee47c"
 layer = "L0"
 build = "nettle"
+
+[[source]]
+name = "libbsd"
+version = "0.12.2"
+url = "https://libbsd.freedesktop.org/releases/libbsd-0.12.2.tar.xz"
+sha256 = "b88cc9163d0c652aaf39a99991d974ddba1c3a9711db8f1b5838af2a14731014"
+layer = "L1"
+build = "libbsd"
+
+[[source]]
+name = "libpng"
+version = "1.6.43"
+url = "https://download.sourceforge.net/libpng/libpng-1.6.43.tar.xz"
+sha256 = "6a5ca0652392a2d7c9db2ae5b40210843c0bbc081cbd410825ab00cc59f14a6c"
+layer = "L1"
+build = "libpng"
+
+[[source]]
+name = "libunistring"
+version = "1.2"
+url = "https://ftp.gnu.org/gnu/libunistring/libunistring-1.2.tar.gz"
+sha256 = "fd6d5662fa706487c48349a758b57bc149ce94ec6c30624ec9fdc473ceabbc8e"
+layer = "L1"
+build = "libunistring"
