@@ -14,30 +14,39 @@ permissions:
 jobs:
   linux-x86_64:
     runs-on: ubuntu-22.04
+    container:
+      # manylinux_2_28 = AlmaLinux 8 base, glibc 2.28. Widest deploy compat:
+      # works on RHEL/Alma/Rocky 8+, Debian 11+, Ubuntu 20.04+. The L4-L6
+      # libraries (GnuTLS, GLib, Cairo) pull in too much glibc surface for
+      # ubuntu-22.04 (glibc 2.35) artifacts to be portable downstream.
+      image: quay.io/pypa/manylinux_2_28_x86_64
     steps:
       - uses: actions/checkout@v4
 
-      - name: install build deps
+      - name: install build deps (manylinux has gcc-14/cmake/autoconf/patchelf)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential pkg-config patchelf zstd \
-            cmake meson ninja-build \
-            autoconf automake libtool \
-            python3 python3-pip
+          /usr/bin/dnf install -y zstd which file diffutils gettext gettext-devel perl-interpreter
+          # meson + ninja from pip (manylinux ships multiple pythons; cp311 is fine)
+          /opt/python/cp311-cp311/bin/pip install --no-cache-dir meson ninja
+          ln -sf /opt/python/cp311-cp311/bin/meson /usr/local/bin/meson
+          ln -sf /opt/python/cp311-cp311/bin/ninja /usr/local/bin/ninja
+          ln -sf /opt/python/cp311-cp311/bin/python3 /usr/local/bin/python3-meson
 
       - name: tool versions
         run: |
           gcc --version | head -1
           cmake --version | head -1
           patchelf --version
+          meson --version
+          ninja --version
           python3 --version
+          zstd --version | head -1
 
       - name: fetch sources
         run: bash scripts/fetch-sources.sh
 
-      - name: build L0
-        run: bash scripts/build-all.sh --layer L0
+      - name: build all layers
+        run: bash scripts/build-all.sh --all
 
       - name: verify SONAMEs against registry
         run: bash scripts/verify.sh
@@ -52,6 +61,13 @@ jobs:
           ls -lh install-linux-x86_64.tar.zst
           echo "── META.txt ──"
           cat install/META.txt
+          echo "── RUNPATH sanity ──"
+          for f in install/lib/*.so*; do
+            [[ -L "$f" ]] && continue
+            [[ -f "$f" ]] || continue
+            line=$(readelf -d "$f" 2>/dev/null | grep -E "RPATH|RUNPATH" || echo "  (no runpath)")
+            printf '%-40s %s\n' "${f##*/}" "$line"
+          done
 
       - name: upload artifact
         uses: actions/upload-artifact@v4

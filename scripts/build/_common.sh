@@ -22,14 +22,29 @@ esac
 
 # ─── toolchain knobs ────────────────────────────────────────────────────────
 export NPROC="$(nproc 2>/dev/null || echo 4)"
-export PKG_CONFIG_PATH="${INSTALL_DIR}/lib/pkgconfig:${INSTALL_DIR}/lib64/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
+export PKG_CONFIG_PATH="${INSTALL_DIR}/lib/pkgconfig:${INSTALL_DIR}/lib64/pkgconfig:${INSTALL_DIR}/share/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
+export CMAKE_PREFIX_PATH="${INSTALL_DIR}${CMAKE_PREFIX_PATH:+:${CMAKE_PREFIX_PATH}}"
+# Make build-time tools (e.g. glib-genmarshal) findable in their own subsequent
+# invocations once installed under ${INSTALL_DIR}/bin.
+export PATH="${INSTALL_DIR}/bin:${PATH}"
+# NOTE: we deliberately do NOT export LD_LIBRARY_PATH=${INSTALL_DIR}/lib here.
+# The toolchain (gcc, ld, objdump, readelf, strip…) is dynamically linked
+# against system libz/libbfd; putting our freshly-built libz on
+# LD_LIBRARY_PATH causes the loader to prefer ours and can fail with
+# "ELF load command address/offset not properly aligned" or similar, breaking
+# every subsequent invocation. Built artifacts get RUNPATH=$ORIGIN via
+# post_process_install so they find siblings at runtime without
+# LD_LIBRARY_PATH. Individual scripts can opt-in per-command if a configure
+# test genuinely needs to execute one of our libs.
 # Default flags. -fPIC mandatory for shared libs; no -march so artifact is portable.
 export CFLAGS="${CFLAGS:--O2 -fPIC -pipe}"
 export CXXFLAGS="${CXXFLAGS:--O2 -fPIC -pipe}"
-# RUNPATH is normalized by patchelf in post_process_install. Do NOT bake
-# $ORIGIN into LDFLAGS — many upstream Makefiles will macro-expand it inside
-# the build shell and emit a literal "RIGIN" rpath.
-export LDFLAGS="${LDFLAGS:-}"
+# Help compiler/linker find our staged install tree without us having to
+# repeat -I/-L flags in every build script. RUNPATH is normalized by patchelf
+# in post_process_install (do NOT bake $ORIGIN here — many upstream Makefiles
+# would expand it inside the shell and emit a literal "RIGIN" rpath).
+export CPPFLAGS="${CPPFLAGS:-} -I${INSTALL_DIR}/include"
+export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -L${INSTALL_DIR}/lib64"
 
 # ─── logging ────────────────────────────────────────────────────────────────
 log()   { printf '\033[1;34m[%s]\033[0m %s\n' "${LIB_NAME:-libcommon}" "$*"; }
@@ -83,13 +98,48 @@ post_process_install() {
     head -c 4 "${f}" | od -An -c 2>/dev/null | grep -q "177   E   L   F" || continue
 
     if command -v patchelf >/dev/null 2>&1; then
-      patchelf --force-rpath --set-rpath '$ORIGIN' "${f}" || log "warn: patchelf failed on ${f##*/}"
+      # Strip any pre-existing RPATH/RUNPATH first, then install RUNPATH
+      # (NOT RPATH). Without --force-rpath, patchelf emits DT_RUNPATH, which
+      # honors LD_LIBRARY_PATH overrides and is the modern default.
+      patchelf --remove-rpath "${f}" 2>/dev/null || true
+      patchelf --set-rpath '$ORIGIN' "${f}" || log "warn: patchelf failed on ${f##*/}"
     fi
     if command -v strip >/dev/null 2>&1; then
-      strip --strip-unneeded "${f}" 2>/dev/null || true
+      # Strip atomically: write to temp, only swap on success. Some binutils
+      # versions (2.41 on AlmaLinux 8) SIGBUS mid-write on certain ELF files,
+      # which would corrupt the original if we stripped in-place.
+      if strip --strip-unneeded -o "${f}.stripped" "${f}" >/dev/null 2>&1; then
+        mv -f "${f}.stripped" "${f}"
+      else
+        rm -f "${f}.stripped"
+      fi
     fi
   done
   shopt -u nullglob
+
+  # Drop static archives and libtool .la files — we only ship .so shared libs.
+  rm -f "${INSTALL_DIR}/lib"/*.a "${INSTALL_DIR}/lib"/*.la 2>/dev/null || true
+  rm -f "${INSTALL_DIR}/lib64"/*.a "${INSTALL_DIR}/lib64"/*.la 2>/dev/null || true
+
+  # Normalize lib64 → lib for any *.so* files (RH default puts shared libs in
+  # lib64; we want a single canonical install/lib so package.sh & verify.sh
+  # see everything). Also relocate lib64/pkgconfig/*.pc -> lib/pkgconfig/*.pc.
+  if [[ -d "${INSTALL_DIR}/lib64" ]]; then
+    mkdir -p "${INSTALL_DIR}/lib"
+    shopt -s nullglob dotglob
+    for src in "${INSTALL_DIR}/lib64"/*.so*; do
+      [[ -e "${src}" ]] || continue
+      mv -f "${src}" "${INSTALL_DIR}/lib/"
+    done
+    if [[ -d "${INSTALL_DIR}/lib64/pkgconfig" ]]; then
+      mkdir -p "${INSTALL_DIR}/lib/pkgconfig"
+      for pc in "${INSTALL_DIR}/lib64/pkgconfig"/*.pc; do
+        [[ -f "${pc}" ]] || continue
+        mv -f "${pc}" "${INSTALL_DIR}/lib/pkgconfig/"
+      done
+    fi
+    shopt -u nullglob dotglob
+  fi
 }
 
 # Verify expected SONAME exists in install/lib. Calls fail if not.
@@ -105,7 +155,12 @@ assert_soname() {
     [[ -L "${f}" ]] && continue
     [[ -f "${f}" ]] || continue
     local s
-    s="$(objdump -p "${f}" 2>/dev/null | awk '/SONAME/ {print $2; exit}')" || true
+    # Unset LD_LIBRARY_PATH for the tool invocation: objdump itself links
+    # against libz/libbfd, and our staged install/lib (which we put on
+    # LD_LIBRARY_PATH so configure tests can run our libs) can clash with the
+    # toolchain libz, causing "ELF load command address/offset not properly
+    # aligned" and a 127 exit.
+    s="$(env -u LD_LIBRARY_PATH objdump -p "${f}" 2>/dev/null | awk '/SONAME/ {print $2; exit}')" || true
     if [[ "${s}" == "${expected}" ]]; then
       found="${f}"
       break
@@ -119,7 +174,7 @@ assert_soname() {
     for f in "${libdir}"/*.so*; do
       [[ -L "${f}" ]] && continue
       [[ -f "${f}" ]] || continue
-      objdump -p "${f}" 2>/dev/null | awk '/SONAME/ {print "    " $2}'
+      env -u LD_LIBRARY_PATH objdump -p "${f}" 2>/dev/null | awk '/SONAME/ {print "    " $2}'
     done
     fatal "SONAME mismatch"
   fi
