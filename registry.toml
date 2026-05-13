@@ -105,7 +105,8 @@ source = "libtasn1"
 
 [[libcommon.libs]]
 soname = "libp11-kit.so.0"
-status = "planned"
+status = "built"
+source = "p11-kit"
 
 [[libcommon.libs]]
 soname = "libffi.so.8"
@@ -156,7 +157,8 @@ source = "freetype"
 
 [[libcommon.libs]]
 soname = "libfontconfig.so.1"
-status = "planned"
+status = "built"
+source = "fontconfig"
 
 [[libcommon.libs]]
 soname = "libharfbuzz.so.0"
@@ -213,7 +215,8 @@ status = "planned"
 
 [[libcommon.libs]]
 soname = "libxcb.so.1"
-status = "planned"
+status = "built"
+source = "libxcb"
 
 [[libcommon.libs]]
 soname = "libxcb-render.so.0"

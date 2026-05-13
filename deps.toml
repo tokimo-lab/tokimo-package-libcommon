@@ -244,3 +244,51 @@ url = "https://download.gnome.org/sources/libxml2/2.13/libxml2-2.13.5.tar.xz"
 sha256 = "74fc163217a3964257d3be39af943e08861263c4231f9ef5b496b6f6d4c7b2b6"
 layer = "L2"
 build = "libxml2"
+
+# ─── L3 ─────────────────────────────────────────────────────────────────────
+
+# gperf: perfect-hash codegen invoked by fontconfig's build (fcobjshash.h).
+# Ships no .so — installed under ${INSTALL_DIR}/bin solely as a build-time
+# tool; not present in registry.toml. Added at L3 because the manylinux_2_28
+# base image lacks gperf and fontconfig's Makefile shells out to it.
+[[source]]
+name = "gperf"
+version = "3.1"
+url = "https://ftp.gnu.org/gnu/gperf/gperf-3.1.tar.gz"
+sha256 = "588546b945bba4b70b6a3a616e80b4ab466e3f33024a352fc2198112cdbb3ae2"
+layer = "L3"
+build = "gperf"
+
+# xcb-proto: Python codegen + headers consumed by libxcb. Ships no .so —
+# omitted from registry.toml on purpose (libcommon only tracks shipped SONAMEs).
+[[source]]
+name = "xcb-proto"
+version = "1.17.0"
+url = "https://www.x.org/releases/individual/proto/xcb-proto-1.17.0.tar.xz"
+sha256 = "2c1bacd2110f4799f74de6ebb714b94cf6f80fb112316b1219480fd22562148c"
+layer = "L3"
+build = "xcb-proto"
+
+[[source]]
+name = "libxcb"
+version = "1.17.0"
+url = "https://www.x.org/releases/individual/lib/libxcb-1.17.0.tar.xz"
+sha256 = "599ebf9996710fea71622e6e184f3a8ad5b43d0e5fa8c4e407123c88a59a6d55"
+layer = "L3"
+build = "libxcb"
+
+[[source]]
+name = "fontconfig"
+version = "2.15.0"
+url = "https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.15.0.tar.xz"
+sha256 = "63a0658d0e06e0fa886106452b58ef04f21f58202ea02a94c39de0d3335d7c0e"
+layer = "L3"
+build = "fontconfig"
+
+[[source]]
+name = "p11-kit"
+version = "0.25.5"
+url = "https://github.com/p11-glue/p11-kit/releases/download/0.25.5/p11-kit-0.25.5.tar.xz"
+sha256 = "04d0a86450cdb1be018f26af6699857171a188ac6d5b8c90786a60854e1198e5"
+layer = "L3"
+build = "p11-kit"
