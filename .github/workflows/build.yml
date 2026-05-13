@@ -55,6 +55,10 @@ jobs:
           brew update >/dev/null 2>&1 || true
           brew install --quiet bash meson nasm zstd || true
           echo "/opt/homebrew/bin" >> "$GITHUB_PATH"
+          # glib's meson requires the 'packaging' module; meson 1.5+ generally
+          # bundles its own deps but glib's gen scripts import it directly.
+          python3 -m pip install --break-system-packages --quiet packaging || \
+            python3 -m pip install --user --quiet packaging
           # Defensive: kill any DYLD_* env that could redirect dlopen to
           # brew during the build.
           echo "DYLD_LIBRARY_PATH=" >> "$GITHUB_ENV"
