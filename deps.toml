@@ -1,0 +1,36 @@
+# Upstream source manifest for libcommon
+#
+# Each entry declares ONE upstream tarball. fetch-sources.sh reads this file,
+# downloads url to sources/<name>-<version>.<ext>, verifies sha256, then
+# extracts into sources/<name>/ (stripping the top-level directory if needed).
+#
+# build/<name>.sh consumes sources/<name>/ as its srcdir.
+
+schema_version = 1
+
+# ─── L0 (this phase: P1.A) ──────────────────────────────────────────────
+
+[[source]]
+name = "zlib"
+version = "1.3.1"
+url = "https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz"
+sha256 = "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"
+layer = "L0"
+build = "zlib"
+
+[[source]]
+name = "xz"
+version = "5.6.3"
+url = "https://github.com/tukaani-project/xz/releases/download/v5.6.3/xz-5.6.3.tar.xz"
+sha256 = "db0590629b6f0fa36e74aea5f9731dc6f8df068ce7b7bafa45301832a5eebc3a"
+layer = "L0"
+build = "xz"
+# NOTE: 5.6.0 and 5.6.1 were compromised (CVE-2024-3094). 5.6.2+ is clean.
+
+[[source]]
+name = "zstd"
+version = "1.5.7"
+url = "https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz"
+sha256 = "eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3"
+layer = "L0"
+build = "zstd"

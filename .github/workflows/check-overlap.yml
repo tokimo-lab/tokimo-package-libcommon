@@ -1,0 +1,26 @@
+name: check-overlap
+
+# Placeholder workflow. Will be implemented in P1.B once ffmpeg / libvips
+# release artifacts coexist alongside libcommon.
+#
+# Plan:
+#   1. Download latest release artifact from
+#      - tokimo-lab/tokimo-package-libcommon
+#      - tokimo-lab/tokimo-package-ffmpeg
+#      - tokimo-lab/tokimo-package-libvips
+#   2. Extract each, collect install/lib/*.so* SONAMEs into a set per repo.
+#   3. Assert: any pairwise intersection is empty.
+#   4. Assert: each repo's set ⊆ registry.toml's declared (status="built") set.
+#
+# Runs on schedule (daily) + manual dispatch.
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 6 * * *'
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "TODO P1.B: implement cross-repo SONAME overlap check"

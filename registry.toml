@@ -1,0 +1,248 @@
+# tokimo SONAME 全局注册表 — 单一所有权（SoT）契约
+#
+# 每个 SONAME 在三个仓库（libcommon / ffmpeg / libvips）中**全局唯一 owner**。
+# 主仓 CI 通过 tools/check-soname-registry.ts 强制：解压三仓 artifact 后，
+# 任意两仓的 SONAME 交集必须为空，且每个仓库的实际 SONAME 集合必须 ⊆ 本文件声明
+# 的 status="built" 子集。
+#
+# status 字段（libcommon 专用）：
+#   "built"   — 当前 release 已实际产出该 SONAME，CI 会校验存在性
+#   "planned" — 计划纳入，尚未在当前 release 出现，CI 跳过校验
+#
+# 修改流程：动 SONAME 归属必须先改本文件 + bump libcommon major，再依次 rebuild 三仓。
+
+schema_version = 1
+
+# ────────────────────────────────────────────────────────────────────────────
+# libcommon — 49 个共享底座 SONAME
+# 当前 release: v0.1.0-alpha — 仅 3 个 built (zlib/xz/zstd)，其余 planned
+# ────────────────────────────────────────────────────────────────────────────
+[libcommon]
+version = "0.1.0-alpha"
+platforms = ["linux-x86_64"]
+
+# 基础压缩 / 编码
+[[libcommon.libs]]
+soname = "libz.so.1"
+status = "built"
+source = "zlib"
+
+[[libcommon.libs]]
+soname = "liblzma.so.5"
+status = "built"
+source = "xz"
+
+[[libcommon.libs]]
+soname = "liblz4.so.1"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libzstd.so.1"
+status = "built"
+source = "zstd"
+
+[[libcommon.libs]]
+soname = "libbrotlicommon.so.1"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libbrotlidec.so.1"
+status = "planned"
+
+# 字符集 / 国际化 / 文本
+[[libcommon.libs]]
+soname = "libicudata.so.74"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libicuuc.so.74"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libunistring.so.5"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libidn2.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libpcre2-8.so.0"
+status = "planned"
+
+# 加密 / TLS / GMP
+[[libcommon.libs]]
+soname = "libgmp.so.10"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libnettle.so.8"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libhogweed.so.6"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libgnutls.so.30"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libtasn1.so.6"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libp11-kit.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libffi.so.8"
+status = "planned"
+
+# 图像基础
+[[libcommon.libs]]
+soname = "libpng16.so.16"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libwebp.so.7"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libwebpmux.so.3"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libsharpyuv.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libopenjp2.so.7"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "liblcms2.so.2"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libpixman-1.so.0"
+status = "planned"
+
+# 字体 / 文字排版
+[[libcommon.libs]]
+soname = "libfreetype.so.6"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libfontconfig.so.1"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libharfbuzz.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libgraphite2.so.3"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libfribidi.so.0"
+status = "planned"
+
+# XML / 配置
+[[libcommon.libs]]
+soname = "libexpat.so.1"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libxml2.so.2"
+status = "planned"
+
+# 2D 绘图
+[[libcommon.libs]]
+soname = "libcairo.so.2"
+status = "planned"
+
+# X11 / XCB
+[[libcommon.libs]]
+soname = "libX11.so.6"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libXau.so.6"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libXdmcp.so.6"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libXext.so.6"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libXrender.so.1"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libxcb.so.1"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libxcb-render.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libxcb-shm.so.0"
+status = "planned"
+
+# 杂项 unix
+[[libcommon.libs]]
+soname = "libbsd.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libmd.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libgomp.so.1"
+status = "planned"
+
+# glib 五件套
+[[libcommon.libs]]
+soname = "libglib-2.0.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libgobject-2.0.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libgmodule-2.0.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libgthread-2.0.so.0"
+status = "planned"
+
+[[libcommon.libs]]
+soname = "libgio-2.0.so.0"
+status = "planned"
+
+# ────────────────────────────────────────────────────────────────────────────
+# 系统库（永不打包，由宿主 glibc / gcc-runtime 提供）
+# CI 检查时若发现这些 SONAME 出现在任何包内 → 报错。
+# ────────────────────────────────────────────────────────────────────────────
+[system_excluded.linux]
+sonames = [
+  "ld-linux-x86-64.so.2",
+  "libc.so.6",
+  "libdl.so.2",
+  "libgcc_s.so.1",
+  "libm.so.6",
+  "libpthread.so.0",
+  "libresolv.so.2",
+  "librt.so.1",
+  "libstdc++.so.6",
+]

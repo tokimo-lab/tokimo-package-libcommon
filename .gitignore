@@ -1,0 +1,7 @@
+/build/
+/install/
+/sources/
+*.tar.*
+*.tgz
+*.zip
+.DS_Store
