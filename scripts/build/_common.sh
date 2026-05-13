@@ -256,6 +256,12 @@ post_process_install_macos() {
         install_name_tool -change "${dep}" "@rpath/${dep_base}" "${f}" 2>/dev/null || true
         continue
       fi
+      # Bare basename (no '/') — produced by ICU and a few other Makefiles
+      # that link siblings without a path. Treat as a sibling and rewrite.
+      if [[ "${dep}" != */* ]]; then
+        install_name_tool -change "${dep}" "@rpath/${dep_base}" "${f}" 2>/dev/null || true
+        continue
+      fi
       # Anything else (absolute path outside our tree, not in allow-list above) → fatal.
       fatal "${base}: unexpected LC_LOAD_DYLIB ${dep}"
     done < <(otool -L "${f}" 2>/dev/null | tail -n +2 | awk '{print $1}' | grep -v "^${base}$" || true)
