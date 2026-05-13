@@ -3,6 +3,11 @@
 LIB_NAME="libbsd"
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
+if is_macos; then
+  log "libbsd not built on macOS (BSD APIs in libSystem; libX11 uses native arc4random_buf)"
+  exit 0
+fi
+
 src="$(source_dir libbsd)"
 build="$(prepare_build_dir libbsd)"
 

@@ -3,6 +3,11 @@
 LIB_NAME="libmd"
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
+if is_macos; then
+  log "libmd not built on macOS (BSD hash funcs already in libSystem; libX11 detects arc4random_buf natively)"
+  exit 0
+fi
+
 src="$(source_dir libmd)"
 build="$(prepare_build_dir libmd)"
 

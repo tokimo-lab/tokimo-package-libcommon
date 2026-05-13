@@ -239,11 +239,13 @@ source = "libxcb"
 soname = "libbsd.so.0"
 status = "built"
 source = "libbsd"
+macos = "skip"
 
 [[libcommon.libs]]
 soname = "libmd.so.0"
 status = "built"
 source = "libmd"
+macos = "skip"
 
 [[libcommon.libs]]
 soname = "libgomp.so.1"
