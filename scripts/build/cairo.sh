@@ -16,6 +16,19 @@ src="$(source_dir cairo)"
 build="$(prepare_build_dir cairo)"
 
 log "configuring (meson)"
+# cairo's util/cairo-script-interpreter unconditionally requires lzo
+# headers. On macOS the only available lzo is brew's, whose pkg-config
+# advertises a broken include path (".../include/lzo") so the build
+# fails on `#include <lzo/lzo2a.h>`. We don't ship the script
+# interpreter anyway (drop_lib below), so strip its subdir before
+# meson sees it.
+if is_macos; then
+  util_meson="${src}/util/meson.build"
+  if grep -q "cairo-script" "${util_meson}"; then
+    sed -i.bak "/cairo-script/d" "${util_meson}"
+  fi
+fi
+
 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
   meson setup "${build}" "${src}" \
     --prefix="${INSTALL_DIR}" \
