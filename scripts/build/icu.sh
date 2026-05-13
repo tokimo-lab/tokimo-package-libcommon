@@ -19,6 +19,8 @@ make distclean 2>/dev/null || true
 icu_platform="Linux"
 if is_macos; then
   icu_platform="MacOSX"
+elif is_windows; then
+  icu_platform="MinGW"
 fi
 
 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \

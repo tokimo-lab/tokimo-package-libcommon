@@ -29,6 +29,19 @@ if is_macos; then
   fi
 fi
 
+# Windows: no X11/XCB headers on mingw, and cairo-script-interpreter pulls
+# in lzo we don't ship. Disable both backends and drop the util subdir.
+cairo_xlib_opt="enabled"
+cairo_xcb_opt="enabled"
+if is_windows; then
+  cairo_xlib_opt="disabled"
+  cairo_xcb_opt="disabled"
+  util_meson="${src}/util/meson.build"
+  if grep -q "cairo-script" "${util_meson}"; then
+    sed -i.bak "/cairo-script/d" "${util_meson}"
+  fi
+fi
+
 CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
   meson setup "${build}" "${src}" \
     --prefix="${INSTALL_DIR}" \
@@ -41,8 +54,8 @@ CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
     -Dfreetype=enabled \
     -Dfontconfig=enabled \
     -Dpng=enabled \
-    -Dxlib=enabled \
-    -Dxcb=enabled \
+    -Dxlib="${cairo_xlib_opt}" \
+    -Dxcb="${cairo_xcb_opt}" \
     -Dquartz=disabled \
     -Dsymbol-lookup=disabled \
     -Dglib=disabled
