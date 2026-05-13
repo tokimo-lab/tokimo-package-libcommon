@@ -332,24 +332,34 @@ assert_soname_macos() {
   [[ -z "${mac_base}" ]] && mac_base="$(soname_to_macos_basename "${expected}")"
 
   local f="${libdir}/${mac_base}"
-  if [[ ! -f "${f}" || -L "${f}" ]]; then
+  # f may be a symlink to libfoo.X.Y.Z.dylib (libtool/autotools standard).
+  # We only require: the path exists, resolves to a regular file, and that
+  # file is a Mach-O dylib. -e + readlink covers both real-file and symlink.
+  if [[ ! -e "${f}" ]]; then
     log "ERROR: expected dylib '${mac_base}' (for SONAME ${expected}) not found in ${libdir}"
     log "Present .dylib files:"
     shopt -s nullglob
     for x in "${libdir}"/*.dylib; do
-      [[ -L "${x}" ]] && continue
-      log "    ${x##*/}"
+      if [[ -L "${x}" ]]; then
+        log "    ${x##*/} -> $(readlink "${x}")"
+      else
+        log "    ${x##*/}"
+      fi
     done
     shopt -u nullglob
     fatal "macOS dylib missing for ${expected}"
   fi
 
-  # Verify install_name = @rpath/<mac_base>
+  # Resolve symlink to the real file for install_name check.
+  local real
+  real="$(cd "${libdir}" && readlink -f "${mac_base}" 2>/dev/null || true)"
+  [[ -z "${real}" ]] && real="${f}"
+
   local id
-  id="$(otool -D "${f}" 2>/dev/null | tail -n +2 | head -1 | tr -d ' ')"
-  if [[ "${id}" != "@rpath/${mac_base}" ]]; then
-    log "WARN: ${mac_base} install_name is '${id}' (expected '@rpath/${mac_base}')"
+  id="$(otool -D "${real}" 2>/dev/null | tail -n +2 | head -1 | tr -d ' ')"
+  if [[ "${id}" != "@rpath/${mac_base}" && "${id}" != "@rpath/$(basename "${real}")" ]]; then
+    log "WARN: ${mac_base} install_name is '${id}' (expected '@rpath/${mac_base}' or '@rpath/$(basename "${real}")')"
   fi
-  log "verified dylib: ${expected}  →  lib/${mac_base}"
+  log "verified dylib: ${expected}  →  lib/${mac_base}$([[ -L "${f}" ]] && echo " -> $(readlink "${f}")")"
   unset MACOS_SONAME_OVERRIDE
 }
