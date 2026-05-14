@@ -13,6 +13,12 @@ if is_macos; then
   # arm64 native; aom auto-detects via CMAKE_SYSTEM_PROCESSOR.
   aom_extra+=(-DCONFIG_RUNTIME_CPU_DETECT=1)
 fi
+if is_windows; then
+  # msys2 mingw64 nasm is rejected by aom's nasm probe
+  # ("multipass optimization not supported"). Drop nasm asm path — ffmpeg
+  # statically links libaom and the C fallback is functional.
+  aom_extra+=(-DENABLE_NASM=0 -DAOM_TARGET_CPU=generic)
+fi
 
 log "configuring (cmake)"
 cd "${build}"
