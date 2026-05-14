@@ -239,6 +239,54 @@ if errors:
         print(f"  - {e}")
     sys.exit(1)
 
+# Linux/macOS binary closure: also check shipped binaries (bin/ffmpeg etc.).
+if platform == "linux-x86_64" and bindir.is_dir():
+    actual_sonames = set(actual.keys())
+    for f in sorted(bindir.iterdir()):
+        if f.is_symlink() or not f.is_file() or not os.access(f, os.X_OK):
+            continue
+        try:
+            out = subprocess.check_output(["objdump", "-p", str(f)], text=True, stderr=subprocess.DEVNULL)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+        for line in out.splitlines():
+            line = line.strip()
+            if not line.startswith("NEEDED"):
+                continue
+            dep = line.split(None, 1)[1].strip()
+            if dep in excluded or dep in actual_sonames:
+                continue
+            errors.append(f"bin/{f.name}: depends on '{dep}' missing from install/lib and system_excluded allowlist")
+elif platform == "macos-arm64" and bindir.is_dir():
+    actual_dylibs = set(actual.keys())
+    for f in sorted(bindir.iterdir()):
+        if f.is_symlink() or not f.is_file() or not os.access(f, os.X_OK):
+            continue
+        try:
+            out = subprocess.check_output(["otool", "-L", str(f)], text=True, stderr=subprocess.DEVNULL)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+        for line in out.splitlines()[1:]:
+            dep = line.strip().split(" ", 1)[0].strip()
+            if not dep:
+                continue
+            # System dylibs live in /usr/lib or /System/Library — accept.
+            if dep.startswith("/usr/lib/") or dep.startswith("/System/"):
+                continue
+            base = dep.rsplit("/", 1)[-1]
+            if dep.startswith("@rpath/") or dep.startswith("@loader_path/") or dep.startswith("@executable_path/"):
+                if base in actual_dylibs:
+                    continue
+                errors.append(f"bin/{f.name}: {dep} not present in install/lib")
+            else:
+                errors.append(f"bin/{f.name}: absolute path dep '{dep}' (must be @rpath)")
+
+if errors:
+    print("\n❌ verify failed (binary closure):")
+    for e in errors:
+        print(f"  - {e}")
+    sys.exit(1)
+
 print(f"\n✅ verify OK: {len(actual)} {label} match registry "
       f"(built={len(expected)}, planned={len(planned)}, skipped-on-{platform}={len(skipped_sonames)})")
 PY
