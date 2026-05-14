@@ -79,8 +79,8 @@ else
   # AddDllDirectory(install/bin). Both install/lib (for import libs *.dll.a)
   # and install/bin (for DLLs themselves) are added to -L. -fPIC is silently
   # a no-op on PE (warning suppressed at gcc 15).
-  export CFLAGS="${CFLAGS} -Wno-attributes"
-  export CXXFLAGS="${CXXFLAGS} -Wno-attributes"
+  export CFLAGS="${CFLAGS} -Wno-attributes -std=gnu17"
+  export CXXFLAGS="${CXXFLAGS} -Wno-attributes -std=gnu++17"
   export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -L${INSTALL_DIR}/bin"
   # Pin pkg-config to our tree ONLY: msys2's /mingw64 ships pkg-config files
   # for any optionally-installed prebuilt lib (zlib, libpng…). We never
