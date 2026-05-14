@@ -101,13 +101,17 @@ linux_extras=(
   --enable-libdrm
   --enable-vaapi
   --enable-nvenc
-  --enable-cuda-llvm
   --enable-ffnvcodec
 )
 
 macos_extras=(
   --enable-videotoolbox
   --enable-audiotoolbox
+  # vf_transpose_vt source is referenced by allfilters.c but its .o is
+  # built only with the full jellyfin-ffmpeg metal/videotoolbox patches +
+  # SDK setup that we don't replicate verbatim. Disable the filter so the
+  # libavfilter linker step stops complaining about _ff_vf_transpose_vt.
+  --disable-filter=transpose_vt
 )
 
 windows_extras=(
