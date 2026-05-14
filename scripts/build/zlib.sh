@@ -14,9 +14,12 @@ if is_windows; then
   log "building (win32/Makefile.gcc)"
   cd "${src}"
   make -f win32/Makefile.gcc clean >/dev/null 2>&1 || true
+  # Build only library targets; skip test exes (example.exe / minigzip.exe)
+  # which sometimes hit ld linker quirks on the runner and are not needed.
   make -j"${NPROC}" -f win32/Makefile.gcc \
     CFLAGS="${CFLAGS}" \
-    LDFLAGS="${LDFLAGS}"
+    LDFLAGS="${LDFLAGS}" \
+    libz.a zlib1.dll
 
   log "installing"
   # win32/Makefile.gcc honors BINARY_PATH, INCLUDE_PATH, LIBRARY_PATH and
