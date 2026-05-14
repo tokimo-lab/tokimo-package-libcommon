@@ -4,8 +4,13 @@
 # Notes:
 #   --disable-frontend  drops the lame CLI (would pull ncurses/termcap on
 #                       some Linux distros; not needed for libavcodec link).
-#   --disable-decoder   drops mpglib (decoding only); libmp3lame still
-#                       provides the encoder symbols ffmpeg needs.
+#
+# NOTE: do NOT pass --disable-decoder. Even when the decoder runtime is
+# disabled, lame's exported symbol list (libmp3lame.sym) still references
+# the hip_* / lame_decode_* symbols, which causes the link to fail on
+# linkers that enforce export lists (Apple ld64, mingw ld). GNU ld on
+# Linux silently tolerates the missing exports, but we keep the decoder
+# enabled on every platform for parity. The extra mpglib code is ~30 KB.
 LIB_NAME="lame"
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
@@ -20,8 +25,7 @@ CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
     --libdir="${INSTALL_DIR}/lib" \
     --enable-shared \
     --disable-static \
-    --disable-frontend \
-    --disable-decoder
+    --disable-frontend
 
 log "building"
 make -j"${NPROC}"
