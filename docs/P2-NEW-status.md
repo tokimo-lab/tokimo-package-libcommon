@@ -9,8 +9,8 @@
 
 | Wave | Scope | Status |
 |------|-------|--------|
-| **A** | 5 BSD/LGPL leaf encoders (libogg, opus, lame, soxr, dav1d) | ✅ scripts + registry + deps committed; CI triggered |
-| B | GPL video encoders: x264, x265, svt-av1, vpx, aom, theora | ⏳ pending wave A green |
+| **A** | 5 BSD/LGPL leaf encoders (libogg, opus, lame, soxr, dav1d) | ✅ **GREEN on all 3 platforms** (run 25859811868 @ 6fadf65) |
+| B | GPL video encoders: x264, x265, svt-av1, vpx, aom, theora | ⏸ awaiting manager review of Wave A |
 | C | subs/container/net/img: libass, libbluray, srt, zvbi, zimg, openmpt, jxl, chromaprint, fdk-aac, libvorbis | ⏳ |
 | D | GPU headers-only: nv-codec-headers, AMF | ⏳ (linux/windows only) |
 | E | ffmpeg from jellyfin-ffmpeg + 96-patch series apply | ⏳ — Wave A+B+E are the must-haves; C/D may slip to v1.1.x |
@@ -119,8 +119,23 @@ from Wave C, defer to v1.1.x. Wave A+B+E = ~14-25 runs is the safe core.
 
 ## Next session pick-up
 
-1. Watch run https://github.com/tokimo-lab/tokimo-package-libcommon/actions/runs/25849768721
-2. If green on all 3 platforms → start Wave B
-3. If red on any platform → fix per-lib commits, push, repeat
-4. Once v1.1.0 ready: bump `registry.toml` `[libcommon].version = "1.1.0"`,
-   tag locally, **stop** and hand to manager for tag-push approval
+1. Wave A is green — manager review the diff on `ffmpeg-port` (commits `d08f84d`..`6fadf65`).
+2. If approved → start Wave B: x264, x265, svt-av1, vpx, aom, theora.
+3. Once v1.1.0 ready: bump `registry.toml` `[libcommon].version = "1.1.0"`,
+   tag locally, **stop** and hand to manager for tag-push approval.
+
+## Wave A — landed fixes (run-by-run)
+
+| Run | SHA | Failure | Fix commit |
+|-----|-----|---------|------------|
+| 25849768721 | 911cda1 | linux: soxr CMake <3.5; macos+win: lame undefined `hip_*` | `c8ce79a` drop --disable-decoder, `05144ad` CMAKE_POLICY_VERSION_MINIMUM=3.5 |
+| 25852292086 | 05144ad | linux: dav1d `-Wshorten-64-to-32`; macos+win: lame stale `lame_init_old` in .sym | `d123030` sed-strip lame_init_old, `3d5e8cb` sed-strip -Wshorten flag |
+| 25854912954 | 3d5e8cb | linux: dav1d `nasm not found`; macos: soxr clang-16 implicit-decl; win: soxr DLL name | `acb3f7c` install nasm, `0cc3944` libsoxr.dll, `845b3cb` -Wno-error=implicit-decl |
+| 25857379235 | 845b3cb | macos only: soxr SIMD32 undefined symbols on arm64 | `6fadf65` disable WITH_CR32S/CR64S/VR32S on macOS |
+| **25859811868** | **6fadf65** | — | ✅ **all 3 platforms green** |
+
+## CI budget
+
+5 runs × 3 jobs = 15 jobs consumed of 50.
+
+Remaining: 35 jobs ≈ 11 more iterations across Waves B/E. Wave C/D should be deferred if they consume more than 3 runs each.
