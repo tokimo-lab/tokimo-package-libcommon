@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [main, macos-port, windows-port]
+    branches: [main, macos-port, windows-port, ffmpeg-port]
     tags: ['v*']
   pull_request:
     branches: [main]
