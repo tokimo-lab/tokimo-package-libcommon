@@ -24,9 +24,14 @@ cmake -S "${src}" -B "${build}" \
   -DGRAPHITE2_NSEGCACHE=ON
 
 log "building"
-# graphite2 cmake adds tests/ subdir unconditionally; tests/featuremap fails
-# on gcc 16 (missing <cstdint> includes). Build only the shared lib target.
-cmake --build "${build}" -j"${NPROC}" --target graphite2
+if is_windows; then
+  # graphite2 1.3.14 tests use uint8_t/uint16_t without including <cstdint>;
+  # gcc 16 rejects this. Build only library + gr2fonttest (the latter is
+  # required by the install step).
+  cmake --build "${build}" -j"${NPROC}" --target graphite2 --target gr2fonttest
+else
+  cmake --build "${build}" -j"${NPROC}"
+fi
 
 log "installing"
 cmake --install "${build}"
