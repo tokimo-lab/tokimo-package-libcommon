@@ -57,6 +57,7 @@ CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
     -Dxlib="${cairo_xlib_opt}" \
     -Dxcb="${cairo_xcb_opt}" \
     -Dquartz=disabled \
+    -Ddwrite=disabled \
     -Dsymbol-lookup=disabled \
     -Dglib=disabled
 
