@@ -68,5 +68,15 @@ for lib in "${libs[@]}"; do
   bash "${script}"
 done
 
+# Only the --all path produces a shippable tree. Prune auxiliary binaries
+# from install/bin (brotli, nettle-hash, pcre2test, ...) installed
+# transitively by deps; keep only ffmpeg/ffprobe/ffplay. Run AFTER every
+# lib so build-time helpers like gperf survive until they are no longer
+# needed.
+if [[ "${mode}" == "all" ]]; then
+  source "${REPO_ROOT}/scripts/build/_common.sh"
+  prune_install_bin
+fi
+
 echo
 echo "[build-all] all done."

@@ -153,7 +153,6 @@ source_dir() {
 #           brew/MacPorts leakage, ad-hoc codesign.
 # Skips static libs and non-shared files. Idempotent.
 post_process_install() {
-  prune_install_bin
   if is_macos; then
     post_process_install_macos
   elif is_windows; then
@@ -164,12 +163,14 @@ post_process_install() {
 }
 
 # Keep only the binaries we intentionally ship. Many deps drop auxiliary
-# tools (brotli, nettle-hash, pcre2test, xmlwf, hb-subset,
-# gi-compile-repository, p11-kit, pkcs1-conv, sexp-conv, ...) into
-# ${INSTALL_DIR}/bin. Those reference libs we did NOT ship (libbrotlienc,
-# libharfbuzz-subset, libgirepository, libpcre2-posix, ...) and trip the
-# verify closure check. We never need them at runtime, so prune to an
-# allowlist before running the platform-specific post-processors.
+# tools (brotli, nettle-hash, pcre2test, xmlwf, hb-subset, ...) into
+# ${INSTALL_DIR}/bin alongside build-time helpers we DO need at build time
+# (gperf, glib-mkenums, ...). They reference libs we did not ship and trip
+# the verify closure check. Run this ONCE at the end of build-all.sh, after
+# every lib has had a chance to use its build-time helpers. Never call it
+# from per-lib post_process_install — that would delete gperf before
+# fontconfig configure runs. Windows ships DLLs in install/bin so it is a
+# no-op there.
 prune_install_bin() {
   # Windows ships DLLs in install/bin — never prune there.
   is_windows && return 0
