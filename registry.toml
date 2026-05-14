@@ -493,8 +493,10 @@ soname = "libvpx.so.10"
 status = "built"
 source = "libvpx"
 # license: BSD-3-Clause + PATENTS (Google)
-# libvpx's own configure on mingw emits libvpx.dll (no version suffix).
-windows = "libvpx.dll"
+# libvpx's configure does not support --enable-shared on mingw; on Windows
+# we build it static-only and link it into ffmpeg directly — no standalone
+# DLL artifact ships. Linux/macOS retain the shared lib.
+windows = "skip"
 
 [[libcommon.libs]]
 soname = "libaom.so.3"

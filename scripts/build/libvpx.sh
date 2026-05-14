@@ -19,12 +19,20 @@ fi
 
 cd "${build}"
 log "configuring (target=${vpx_target})"
+# libvpx's configure does not support `--enable-shared` on mingw
+# ('--enable-shared only supported on ELF, OS/2, and Darwin for now').
+# On Windows we build a static lib that ffmpeg will link in directly;
+# there is no standalone libvpx.dll artifact. Registry marks windows="skip".
+vpx_shared_flags=(--enable-shared --disable-static)
+if is_windows; then
+  vpx_shared_flags=(--disable-shared --enable-static)
+fi
+
 "${src}/configure" \
   --prefix="${INSTALL_DIR}" \
   --libdir="${INSTALL_DIR}/lib" \
   --target="${vpx_target}" \
-  --enable-shared \
-  --disable-static \
+  "${vpx_shared_flags[@]}" \
   --enable-pic \
   --enable-vp8 --enable-vp9 \
   --enable-vp9-highbitdepth \
@@ -48,5 +56,9 @@ make install
 log "post-processing"
 post_process_install
 
-assert_soname "libvpx.so.10"
+if is_windows; then
+  log "windows: static-only build, no libvpx.dll artifact"
+else
+  assert_soname "libvpx.so.10"
+fi
 log "done"
