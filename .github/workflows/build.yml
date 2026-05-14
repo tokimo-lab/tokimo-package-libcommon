@@ -55,7 +55,7 @@ jobs:
       - name: install build deps (linux)
         if: matrix.platform == 'linux-x86_64'
         run: |
-          /usr/bin/dnf install -y zstd which file diffutils gettext gettext-devel perl-interpreter
+          /usr/bin/dnf install -y zstd which file diffutils gettext gettext-devel perl-interpreter nasm
           /opt/python/cp311-cp311/bin/pip install --no-cache-dir meson ninja
           ln -sf /opt/python/cp311-cp311/bin/meson /usr/local/bin/meson
           ln -sf /opt/python/cp311-cp311/bin/ninja /usr/local/bin/ninja
