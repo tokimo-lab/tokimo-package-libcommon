@@ -562,3 +562,58 @@ status = "built"
 source = "libbluray"
 # license: LGPL-2.1-or-later
 windows = "libbluray-2.dll"
+
+# ────────────────────────────────────────────────────────────────────────────
+# L11 — ffmpeg umbrella (Wave E). 8 SONAMEs; jellyfin-ffmpeg 7.0.2-7
+# (= upstream FFmpeg n7.0.x). GPL-3.0-or-later (because --enable-gpl
+# --enable-version3 and at least one GPL dep among libx264/libx265).
+# ────────────────────────────────────────────────────────────────────────────
+
+[[libcommon.libs]]
+soname = "libavutil.so.59"
+status = "built"
+source = "jellyfin-ffmpeg"
+# license: GPL-3.0-or-later (aggregate)
+windows = "avutil-59.dll"
+
+[[libcommon.libs]]
+soname = "libavcodec.so.61"
+status = "built"
+source = "jellyfin-ffmpeg"
+windows = "avcodec-61.dll"
+
+[[libcommon.libs]]
+soname = "libavformat.so.61"
+status = "built"
+source = "jellyfin-ffmpeg"
+windows = "avformat-61.dll"
+
+[[libcommon.libs]]
+soname = "libavfilter.so.10"
+status = "built"
+source = "jellyfin-ffmpeg"
+windows = "avfilter-10.dll"
+
+[[libcommon.libs]]
+soname = "libswscale.so.8"
+status = "built"
+source = "jellyfin-ffmpeg"
+windows = "swscale-8.dll"
+
+[[libcommon.libs]]
+soname = "libswresample.so.5"
+status = "built"
+source = "jellyfin-ffmpeg"
+windows = "swresample-5.dll"
+
+[[libcommon.libs]]
+soname = "libpostproc.so.58"
+status = "built"
+source = "jellyfin-ffmpeg"
+windows = "postproc-58.dll"
+
+[[libcommon.libs]]
+soname = "libavdevice.so.61"
+status = "built"
+source = "jellyfin-ffmpeg"
+windows = "avdevice-61.dll"

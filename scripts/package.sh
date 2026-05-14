@@ -57,6 +57,16 @@ inspect_id() {
     [[ -n "${id}" ]] && echo "${id}    ${f#install/}"
   done
   shopt -u nullglob
+  echo ""
+  echo "── binaries ──"
+  shopt -s nullglob
+  for bin_dir in install/bin install/usr/bin; do
+    [[ -d "${bin_dir}" ]] || continue
+    for f in "${bin_dir}"/ffmpeg "${bin_dir}"/ffmpeg.exe "${bin_dir}"/ffprobe "${bin_dir}"/ffprobe.exe; do
+      [[ -f "${f}" ]] && echo "${f#install/}"
+    done
+  done
+  shopt -u nullglob
 } > install/META.txt
 
 echo "[package] META.txt:"

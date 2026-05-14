@@ -529,3 +529,13 @@ url = "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/refs/tags/v1.4.34
 sha256 = "a8f8363ee9b89c7fb93fa8cca521f602d5fd2c083382fc14f05c37d952905cc6"
 layer = "L10"
 build = "AMF"
+
+# ─── L11 (Wave E: ffmpeg umbrella — depends on all above) ──────────────────
+
+[[source]]
+name = "jellyfin-ffmpeg"
+version = "7.0.2-7"
+url = "https://github.com/jellyfin/jellyfin-ffmpeg/archive/refs/tags/v7.0.2-7.tar.gz"
+sha256 = "07da67a62df5c92b5772b17658b3fd22fbcf1799fb7e6d62589503b1ee48924c"
+layer = "L11"
+build = "ffmpeg"
