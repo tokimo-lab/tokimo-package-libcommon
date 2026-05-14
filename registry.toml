@@ -506,6 +506,17 @@ source = "libaom"
 windows = "libaom.dll"
 
 [[libcommon.libs]]
+soname = "libtheora.so.0"
+status = "built"
+source = "libtheora"
+# license: BSD-3-Clause
+# The combined libtheora.so.0 (decoder+encoder) is built by upstream
+# Makefile.am alongside the split libtheoradec.so.1 / libtheoraenc.so.1.
+# We ship it so that consumers linking against the historical -ltheora
+# (not -ltheoradec / -ltheoraenc) keep working.
+windows = "libtheora-0.dll"
+
+[[libcommon.libs]]
 soname = "libtheoradec.so.1"
 status = "built"
 source = "libtheora"
@@ -540,6 +551,15 @@ status = "built"
 source = "libvorbis"
 # license: BSD-3-Clause
 windows = "libvorbisenc-2.dll"
+
+[[libcommon.libs]]
+soname = "libvorbisfile.so.3"
+status = "built"
+source = "libvorbis"
+# license: BSD-3-Clause
+# Convenience wrapper around libvorbis for stdio-based decoders; shipped
+# by upstream Makefile.am alongside libvorbis/libvorbisenc.
+windows = "libvorbisfile-3.dll"
 
 [[libcommon.libs]]
 soname = "libass.so.9"
