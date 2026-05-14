@@ -318,6 +318,64 @@ post_process_install_macos() {
 
   # Drop static archives + .la files.
   rm -f "${INSTALL_DIR}/lib"/*.a "${INSTALL_DIR}/lib"/*.la 2>/dev/null || true
+
+  # Rewrite LC_LOAD_DYLIB on installed binaries (install/bin/*) the same
+  # way as for dylibs: any reference to INSTALL_DIR/lib must become
+  # @rpath/<base>, and a single LC_RPATH=@executable_path/../lib must be
+  # present so the binary can find its sibling dylibs when relocated.
+  local bindir="${INSTALL_DIR}/bin"
+  if [[ -d "${bindir}" ]]; then
+    shopt -s nullglob
+    for f in "${bindir}"/*; do
+      [[ -L "${f}" ]] && continue
+      [[ -f "${f}" ]] || continue
+      [[ -x "${f}" ]] || continue
+      local magic
+      magic="$(xxd -p -l 4 "${f}" 2>/dev/null || true)"
+      case "${magic}" in
+        cffaedfe|cefaedfe|feedfacf|feedface) ;;
+        *) continue ;;
+      esac
+
+      # Add LC_RPATH @executable_path/../lib if missing.
+      if ! otool -l "${f}" 2>/dev/null | grep -A2 'cmd LC_RPATH' | grep -q '@executable_path/../lib$'; then
+        install_name_tool -add_rpath "@executable_path/../lib" "${f}" 2>/dev/null || true
+      fi
+
+      # Strip absolute INSTALL_DIR rpath if baked in.
+      while otool -l "${f}" 2>/dev/null | grep -A2 'cmd LC_RPATH' | grep -q "path ${INSTALL_DIR}/lib "; do
+        install_name_tool -delete_rpath "${INSTALL_DIR}/lib" "${f}" 2>/dev/null || break
+      done
+
+      local dep
+      while IFS= read -r dep; do
+        [[ -z "${dep}" ]] && continue
+        case "${dep}" in
+          /usr/lib/*|/System/Library/*|@rpath/*|@loader_path/*|@executable_path/*)
+            continue
+            ;;
+          /opt/homebrew/*|/opt/local/*|/usr/local/*)
+            fatal "bin/$(basename "${f}"): links against ${dep} (must be built inside libcommon)"
+            ;;
+        esac
+        local dep_base="$(basename "${dep}")"
+        if [[ "${dep}" == "${INSTALL_DIR}/lib/"* ]] || \
+           [[ "${dep}" == "${BUILD_DIR}/"* ]] || \
+           [[ "${dep}" == "${REPO_ROOT}/"* ]]; then
+          install_name_tool -change "${dep}" "@rpath/${dep_base}" "${f}" 2>/dev/null || true
+          continue
+        fi
+        if [[ "${dep}" != */* ]]; then
+          install_name_tool -change "${dep}" "@rpath/${dep_base}" "${f}" 2>/dev/null || true
+          continue
+        fi
+        fatal "bin/$(basename "${f}"): unexpected LC_LOAD_DYLIB ${dep}"
+      done < <(otool -L "${f}" 2>/dev/null | tail -n +2 | awk '{print $1}' || true)
+
+      codesign -s - -f "${f}" 2>/dev/null || log "warn: codesign failed on bin/$(basename "${f}")"
+    done
+    shopt -u nullglob
+  fi
 }
 
 # Windows / mingw post-processing.
