@@ -31,15 +31,15 @@ if [[ -f "${patch_series}" ]] && [[ ! -f "${src}/.libcommon-patches-applied" ]];
     patch_path="debian/patches/$p"
     if [[ ! -f "$patch_path" ]]; then
       log "  ✗ missing patch: $p (skip)"
-      ((skipped++))
+      skipped=$((skipped + 1))
       continue
     fi
     if patch -p1 --dry-run --silent < "$patch_path" >/dev/null 2>&1; then
       patch -p1 --silent < "$patch_path"
-      ((applied++))
+      applied=$((applied + 1))
     else
       log "  ⚠ patch did not apply cleanly: $p (skip)"
-      ((skipped++))
+      skipped=$((skipped + 1))
     fi
   done < "${patch_series}"
   log "patches applied=${applied} skipped=${skipped}"
