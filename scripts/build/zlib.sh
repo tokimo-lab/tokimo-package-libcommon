@@ -6,6 +6,34 @@ source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 src="$(source_dir zlib)"
 build="$(prepare_build_dir zlib)"
 
+if is_windows; then
+  # zlib's posix-y configure script does not detect msys2 as Windows; it
+  # would happily produce libz.so.1.3.1. Use the dedicated win32 makefile
+  # (win32/Makefile.gcc) which produces the canonical mingw zlib1.dll +
+  # libz.dll.a import library.
+  log "building (win32/Makefile.gcc)"
+  cd "${src}"
+  make -f win32/Makefile.gcc clean >/dev/null 2>&1 || true
+  make -j"${NPROC}" -f win32/Makefile.gcc \
+    CFLAGS="${CFLAGS}" \
+    LDFLAGS="${LDFLAGS}"
+
+  log "installing"
+  # win32/Makefile.gcc honors BINARY_PATH, INCLUDE_PATH, LIBRARY_PATH and
+  # SHARED_MODE=1 (install both static + shared).
+  make -f win32/Makefile.gcc install \
+    BINARY_PATH="${INSTALL_DIR}/bin" \
+    INCLUDE_PATH="${INSTALL_DIR}/include" \
+    LIBRARY_PATH="${INSTALL_DIR}/lib" \
+    SHARED_MODE=1
+
+  log "post-processing"
+  post_process_install
+  WINDOWS_DLL_OVERRIDE="zlib1.dll" assert_soname "libz.so.1"
+  log "done"
+  exit 0
+fi
+
 log "configuring (out-of-tree)"
 cd "${build}"
 # zlib's configure must be run from the build dir AGAINST the src dir.
