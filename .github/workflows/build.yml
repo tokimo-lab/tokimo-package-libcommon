@@ -64,14 +64,15 @@ jobs:
       - name: install build deps (macos)
         if: matrix.platform == 'macos-arm64'
         run: |
-          # macos-14 runner already has: clang/clang++/make/cmake/autoconf/
-          # automake/libtool/pkg-config/ninja/Xcode CLT. We need meson + nasm
-          # (some libs assemble) + zstd + modern bash (system /bin/bash is
-          # still 3.2; build-all.sh uses `mapfile -t` which needs 4+).
+          # macos runner is supposed to ship autoconf/automake/libtool but
+          # observed behaviour: `autoreconf: command not found` on the arm64
+          # image. Install them explicitly. Also need meson + nasm (some libs
+          # assemble) + zstd + modern bash (system /bin/bash is still 3.2;
+          # build-all.sh uses `mapfile -t` which needs 4+).
           # Avoid installing any *libraries* via brew — only build-time
           # tools — so the install/lib tree stays self-contained.
           brew update >/dev/null 2>&1 || true
-          brew install --quiet bash meson nasm zstd || true
+          brew install --quiet bash meson nasm zstd autoconf automake libtool pkg-config || true
           echo "/opt/homebrew/bin" >> "$GITHUB_PATH"
           # glib's meson requires the 'packaging' module; meson 1.5+ generally
           # bundles its own deps but glib's gen scripts import it directly.
