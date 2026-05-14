@@ -40,6 +40,14 @@ if [[ ! -f "${src}/.libcommon-autoreconf-done" ]]; then
     log "patching lib/Makefile.am: add info.c to encoder_sources"
     sed -i.bak2 's|^encoder_sources = \\$|encoder_sources = info.c \\|' "${src}/lib/Makefile.am"
   fi
+  # macOS runners don't ship autoreconf in PATH, so the Makefile.am patch
+  # above doesn't propagate to the generated Makefile.in. Patch Makefile.in
+  # directly too so the encoder's object list (am__objects_11) includes
+  # info.lo regardless of whether autoreconf runs.
+  if ! grep -q 'am__objects_11 = info.lo' "${src}/lib/Makefile.in"; then
+    log "patching lib/Makefile.in: add info.lo to am__objects_11"
+    sed -i.bak3 's|^\(@THEORA_DISABLE_ENCODE_FALSE@am__objects_11 = \)apiwrapper.lo|\1info.lo apiwrapper.lo|' "${src}/lib/Makefile.in"
+  fi
   if command -v autoreconf >/dev/null 2>&1; then
     log "autoreconf -fi -I m4"
     (cd "${src}" && autoreconf -fi -I m4)
