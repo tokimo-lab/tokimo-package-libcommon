@@ -33,5 +33,5 @@ cmake --install .
 log "post-processing"
 post_process_install
 
-assert_soname "libSvtAv1Enc.so.3"
+assert_soname "libSvtAv1Enc.so.2"
 log "done"

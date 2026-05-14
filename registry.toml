@@ -482,7 +482,7 @@ source = "x265"
 windows = "libx265.dll"
 
 [[libcommon.libs]]
-soname = "libSvtAv1Enc.so.3"
+soname = "libSvtAv1Enc.so.2"
 status = "built"
 source = "SVT-AV1"
 # license: BSD-3-Clause (codec) + BSD-2-Clause + PATENTS (AOM)
