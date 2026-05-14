@@ -7,3 +7,4 @@
 .DS_Store
 err.log
 /.tmp-waveb/
+.j*.log
