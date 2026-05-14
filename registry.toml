@@ -420,3 +420,44 @@ sonames = [
   "librt.so.1",
   "libstdc++.so.6",
 ]
+
+# ────────────────────────────────────────────────────────────────────────────
+# L7 — ffmpeg encoder leaf libs (Wave A, BSD/LGPL, no internal deps)
+# Linked into libavformat/libavcodec via ffmpeg --enable-libXXX flags. Each
+# ships as a sibling SONAME alongside the base 49; consumers load via $ORIGIN.
+# ────────────────────────────────────────────────────────────────────────────
+
+[[libcommon.libs]]
+soname = "libogg.so.0"
+status = "built"
+source = "libogg"
+# license: BSD-3-Clause
+windows = "libogg-0.dll"
+
+[[libcommon.libs]]
+soname = "libopus.so.0"
+status = "built"
+source = "opus"
+# license: BSD-3-Clause
+windows = "libopus-0.dll"
+
+[[libcommon.libs]]
+soname = "libmp3lame.so.0"
+status = "built"
+source = "lame"
+# license: LGPL-2.0-or-later
+windows = "libmp3lame-0.dll"
+
+[[libcommon.libs]]
+soname = "libsoxr.so.0"
+status = "built"
+source = "soxr"
+# license: LGPL-2.1-or-later
+windows = "libsoxr-0.dll"
+
+[[libcommon.libs]]
+soname = "libdav1d.so.7"
+status = "built"
+source = "dav1d"
+# license: BSD-2-Clause
+windows = "libdav1d.dll"
