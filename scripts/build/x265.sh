@@ -18,10 +18,15 @@ src="$(source_dir x265)"
 build="$(prepare_build_dir x265)"
 
 x265_extra=()
-# macOS arm64: no x86 asm (yasm/nasm targeting x86) — x265 has its own
-# arm64 NEON path enabled via ENABLE_ASSEMBLY=ON + CMAKE_SYSTEM_PROCESSOR.
+# macOS arm64: x265 4.0's aarch64 NEON intrinsics path
+# (source/common/aarch64/intrapred-prim.cpp etc.) references symbols like
+# g_intraFilterFlags and types like uint16x8_t without proper namespace /
+# header includes, breaking Apple Clang builds. Upstream tracks this as a
+# regression; the pragmatic fix for libcommon is to disable assembly on
+# macOS arm64 — x265 falls back to its portable C path. Linux x86_64 keeps
+# yasm/nasm assembly; Windows mingw uses nasm too.
 if is_macos; then
-  x265_extra+=(-DCROSS_COMPILE_ARM=OFF -DENABLE_ASSEMBLY=ON)
+  x265_extra+=(-DENABLE_ASSEMBLY=OFF)
 fi
 
 log "configuring (cmake)"
@@ -54,5 +59,5 @@ cmake --install .
 log "post-processing"
 post_process_install
 
-assert_soname "libx265.so.215"
+assert_soname "libx265.so.212"
 log "done"

@@ -475,7 +475,7 @@ source = "x264"
 windows = "libx264-164.dll"
 
 [[libcommon.libs]]
-soname = "libx265.so.215"
+soname = "libx265.so.212"
 status = "built"
 source = "x265"
 # license: GPL-2.0-or-later
