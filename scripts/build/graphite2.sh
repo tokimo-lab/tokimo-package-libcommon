@@ -24,7 +24,9 @@ cmake -S "${src}" -B "${build}" \
   -DGRAPHITE2_NSEGCACHE=ON
 
 log "building"
-cmake --build "${build}" -j"${NPROC}"
+# graphite2 cmake adds tests/ subdir unconditionally; tests/featuremap fails
+# on gcc 16 (missing <cstdint> includes). Build only the shared lib target.
+cmake --build "${build}" -j"${NPROC}" --target graphite2
 
 log "installing"
 cmake --install "${build}"
