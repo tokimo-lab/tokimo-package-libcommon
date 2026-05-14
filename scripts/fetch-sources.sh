@@ -28,10 +28,18 @@ python3 - "$@" <<'PY'
 import hashlib
 import os
 import shutil
+import socket
 import subprocess
 import sys
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
+
+# Prevent fetches from hanging forever (msys2 Python's urllib has no
+# default socket timeout). 120s is generous enough for slow mirrors
+# while still detecting dead connections quickly.
+socket.setdefaulttimeout(120)
 
 try:
     import tomllib  # py3.11+
@@ -162,24 +170,25 @@ for entry in data.get("source", []):
         tmp = archive.with_suffix(archive.suffix + ".part")
         if tmp.exists():
             tmp.unlink()
-        # Use curl with explicit timeouts + retries instead of urllib.
-        # urllib.request.urlretrieve has no default timeout and msys2's
-        # Python sometimes stalls indefinitely on TLS handshakes against
-        # mirrors that don't respond. curl is present everywhere we run.
-        subprocess.run(
-            [
-                "curl",
-                "-fsSL",
-                "-A", "Mozilla/5.0 (compatible; tokimo-libcommon-fetch/1.0)",
-                "--connect-timeout", "30",
-                "--max-time", "600",
-                "--retry", "5",
-                "--retry-delay", "5",
-                "-o", str(tmp),
-                url,
-            ],
-            check=True,
-        )
+        # urllib accepts default Python-urllib UA across the mirrors we use
+        # (freedesktop returns 418 to default curl UA, sourceforge returns
+        # 403 to fake browser UAs — both let urllib through). We rely on
+        # socket.setdefaulttimeout(120) above to avoid hangs and implement
+        # an explicit retry loop with backoff.
+        last_err = None
+        for attempt in range(1, 6):
+            try:
+                urllib.request.urlretrieve(url, str(tmp))
+                last_err = None
+                break
+            except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as e:
+                last_err = e
+                if tmp.exists():
+                    tmp.unlink()
+                print(f"[fetch]   attempt {attempt}/5 failed: {e}; retrying in {attempt*5}s", flush=True)
+                time.sleep(attempt * 5)
+        if last_err is not None:
+            raise SystemExit(f"download failed for {name}: {last_err}")
         actual = sha256_file(tmp)
         if actual != want_sha:
             tmp.unlink()
