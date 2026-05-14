@@ -258,7 +258,14 @@ if platform == "linux-x86_64" and bindir.is_dir():
                 continue
             errors.append(f"bin/{f.name}: depends on '{dep}' missing from install/lib and system_excluded allowlist")
 elif platform == "macos-arm64" and bindir.is_dir():
-    actual_dylibs = set(actual.keys())
+    # Build a set of every dylib filename present in install/lib, including
+    # symlinks (e.g. libavcodec.61.dylib → libavcodec.61.3.100.dylib). The
+    # closure check resolves a dep like @rpath/libavcodec.61.dylib against
+    # this set rather than against the registry SONAME map.
+    installed_dylibs = set()
+    for f in inspect_dir.iterdir():
+        if f.name.endswith(".dylib") and (f.is_file() or f.is_symlink()):
+            installed_dylibs.add(f.name)
     for f in sorted(bindir.iterdir()):
         if f.is_symlink() or not f.is_file() or not os.access(f, os.X_OK):
             continue
@@ -275,7 +282,7 @@ elif platform == "macos-arm64" and bindir.is_dir():
                 continue
             base = dep.rsplit("/", 1)[-1]
             if dep.startswith("@rpath/") or dep.startswith("@loader_path/") or dep.startswith("@executable_path/"):
-                if base in actual_dylibs:
+                if base in installed_dylibs:
                     continue
                 errors.append(f"bin/{f.name}: {dep} not present in install/lib")
             else:
