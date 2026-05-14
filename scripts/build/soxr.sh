@@ -11,11 +11,20 @@ need_tool cmake
 src="$(source_dir soxr)"
 build="$(prepare_build_dir soxr)"
 
+# soxr 0.1.3 ships pre-C99 code (implicit declarations of UNINTERLEAVE2 /
+# INTERLEAVE2 macros in util-simd.c paths). clang 16+ promoted
+# -Wimplicit-function-declaration from warning to error by default, so the
+# Apple toolchain hard-fails. The actual symbol resolution is fine at link
+# time — these are SIMD helper macros expanded conditionally. Downgrade to
+# warning so the build succeeds; behaviour is unchanged.
+soxr_cflags="${CFLAGS} -Wno-error=implicit-function-declaration -Wno-implicit-function-declaration"
+
 log "configuring (cmake)"
 cd "${build}"
-cmake "${src}" \
+CFLAGS="${soxr_cflags}" cmake "${src}" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+  -DCMAKE_C_FLAGS="${soxr_cflags}" \
   -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
   -DCMAKE_INSTALL_LIBDIR=lib \
   -DBUILD_SHARED_LIBS=ON \
