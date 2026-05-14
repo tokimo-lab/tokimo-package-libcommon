@@ -170,10 +170,12 @@ for entry in data.get("source", []):
             [
                 "curl",
                 "-fsSL",
+                "-A", "Mozilla/5.0 (compatible; tokimo-libcommon-fetch/1.0)",
                 "--connect-timeout", "30",
                 "--max-time", "600",
-                "--retry", "4",
+                "--retry", "5",
                 "--retry-delay", "5",
+                "--retry-all-errors",
                 "-o", str(tmp),
                 url,
             ],
