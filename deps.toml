@@ -505,6 +505,15 @@ layer = "L9"
 build = "libzimg"
 
 [[source]]
+name = "libudfread"
+version = "1.1.2"
+url = "https://code.videolan.org/videolan/libudfread/-/archive/1.1.2/libudfread-1.1.2.tar.gz"
+sha256 = "2bf16726ac98d093156195bb049a663e07d3323e079c26912546f4e05c77bac5"
+layer = "L9"
+# No standalone build; libbluray.sh copies this into contrib/libudfread/ and
+# compiles it as part of libbluray (avoids shipping an extra SONAME).
+
+[[source]]
 name = "libbluray"
 version = "1.3.4"
 url = "https://code.videolan.org/videolan/libbluray/-/archive/1.3.4/libbluray-1.3.4.tar.gz"

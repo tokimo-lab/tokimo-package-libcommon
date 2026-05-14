@@ -8,6 +8,20 @@ source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 src="$(source_dir libbluray)"
 build="$(prepare_build_dir libbluray)"
 
+# libbluray's release tarball ships a `contrib/libudfread` git-submodule
+# placeholder (empty). configure.ac aborts with "libudfread source tree not
+# found" unless either external pkg-config libudfread is present or the
+# bundled tree contains src/udfread.h. We ship libudfread inline via
+# deps.toml (no separate SONAME, no extra packaging) by copying its source
+# tree into contrib/libudfread/ before configure runs.
+udfread_src="$(source_dir libudfread)"
+if [[ ! -f "${src}/contrib/libudfread/src/udfread.h" ]]; then
+  log "vendoring libudfread into contrib/libudfread"
+  mkdir -p "${src}/contrib/libudfread"
+  # cp -a may fail on cross-device or msys2; use cp -R + dotglob safe form.
+  (cd "${udfread_src}" && tar -cf - .) | (cd "${src}/contrib/libudfread" && tar -xf -)
+fi
+
 # Gitlab archive ships without autotools artifacts — regenerate.
 if [[ ! -f "${src}/configure" ]] || [[ ! -f "${src}/.libcommon-autoreconf-done" ]]; then
   log "running autoreconf -fi"
