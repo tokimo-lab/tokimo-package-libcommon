@@ -23,7 +23,15 @@ elif is_windows; then
   icu_platform="MinGW"
 fi
 
-CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
+# mh-mingw64 hardcodes -std=c++11, but gcc 16's <limits> uses GNU
+# extension __float128 literals (Q suffix) that strict C++11 rejects.
+# Force gnu++17 — ICU 74 is C++17-ready.
+icu_cxxflags="${CXXFLAGS}"
+if is_windows; then
+  icu_cxxflags="${icu_cxxflags} -std=gnu++17"
+fi
+
+CFLAGS="${CFLAGS}" CXXFLAGS="${icu_cxxflags}" LDFLAGS="${LDFLAGS}" \
   ./runConfigureICU "${icu_platform}" \
     --prefix="${INSTALL_DIR}" \
     --libdir="${INSTALL_DIR}/lib" \
