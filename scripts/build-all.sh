@@ -36,6 +36,10 @@ arg = sys.argv[2] if len(sys.argv) > 2 else ""
 with open("deps.toml", "rb") as f:
     data = tomllib.load(f)
 for entry in data.get("source", []):
+    # Entries without a `build` field are header-only or vendored deps
+    # (e.g. libudfread bundled inside libbluray) — skip them.
+    if "build" not in entry:
+        continue
     if mode == "all":
         print(entry["build"])
     elif mode == "layer" and entry.get("layer") == arg:
