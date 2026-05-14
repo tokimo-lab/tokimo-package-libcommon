@@ -26,6 +26,12 @@ fi
 
 log "configuring (cmake)"
 cd "${build}"
+# x265 4.0's CMakeLists.txt (in source/) explicitly does
+# `cmake_policy(SET CMP0025 OLD)` / CMP0054 OLD; CMake 4.x removed both
+# policies entirely so the OLD setting is a hard error. Drop those lines
+# (modern behavior is what we want anyway).
+sed -i.bak -E '/cmake_policy\(SET CMP0025 OLD\)/d; /cmake_policy\(SET CMP0054 OLD\)/d' "${src}/source/CMakeLists.txt"
+
 cmake "${src}/source" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
