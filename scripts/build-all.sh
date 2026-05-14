@@ -54,7 +54,7 @@ mkdir -p "${REPO_ROOT}/install" "${REPO_ROOT}/build"
 
 for lib in "${libs[@]}"; do
   script="${REPO_ROOT}/scripts/build/${lib}.sh"
-  [[ -x "${script}" ]] || { echo "FATAL: ${script} not executable"; exit 1; }
+  [[ -f "${script}" ]] || { echo "FATAL: ${script} not found"; exit 1; }
   echo
   echo "════════════════════════════════════════════════════════════════════"
   echo "  building: ${lib}"
