@@ -23,6 +23,8 @@ esac
 # Generate the build list using Python (deps.toml order preserved).
 mapfile -t libs < <(python3 - "${mode}" "${arg}" <<'PY'
 import sys
+# Disable \n→\r\n translation so msys2 mapfile -t gets clean LF-only output.
+sys.stdout.reconfigure(newline="\n")
 try:
     import tomllib
 except ImportError:
