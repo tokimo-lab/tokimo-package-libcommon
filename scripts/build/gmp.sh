@@ -3,19 +3,40 @@
 LIB_NAME="gmp"
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
+if is_windows; then
+  # GMP 6.3.0's configure runs a "long long reliability test" that
+  # miscompiles under gcc 16 (current msys2 toolchain), so source-build
+  # is non-viable here. msys2 ships a patched mingw-w64-x86_64-gmp
+  # package built against the exact same runtime — copy that DLL.
+  prefix="${MSYSTEM_PREFIX:-/mingw64}"
+  src="${prefix}/bin/libgmp-10.dll"
+  [[ -f "${src}" ]] || fatal "${src} not found (mingw-w64-x86_64-gmp not installed?)"
+  log "shipping mingw-w64 prebuilt: ${src}"
+  bindir="${INSTALL_DIR}/bin"
+  mkdir -p "${bindir}"
+  cp -f "${src}" "${bindir}/libgmp-10.dll"
+  chmod 0755 "${bindir}/libgmp-10.dll"
+  # Also copy headers + import library so downstream libs (nettle, gnutls,
+  # p11-kit) can link against it.
+  if [[ -f "${prefix}/include/gmp.h" ]]; then
+    mkdir -p "${INSTALL_DIR}/include"
+    cp -f "${prefix}/include/gmp.h" "${INSTALL_DIR}/include/gmp.h"
+  fi
+  if [[ -f "${prefix}/lib/libgmp.dll.a" ]]; then
+    mkdir -p "${INSTALL_DIR}/lib"
+    cp -f "${prefix}/lib/libgmp.dll.a" "${INSTALL_DIR}/lib/libgmp.dll.a"
+  fi
+  WINDOWS_DLL_OVERRIDE="libgmp-10.dll" assert_soname "libgmp.so.10"
+  log "done"
+  exit 0
+fi
+
 src="$(source_dir gmp)"
 build="$(prepare_build_dir gmp)"
 
 log "configuring"
 cd "${build}"
-# On mingw, GMP's `try.c` compiler probe uses printf("%lld",...) which
-# requires the ANSI stdio shim — without it the probe prints the wrong
-# value and configure aborts with "long long reliability test 1".
-extra_cflags=""
-if is_windows; then
-  extra_cflags="-D__USE_MINGW_ANSI_STDIO=1"
-fi
-CFLAGS="${CFLAGS} ${extra_cflags}" LDFLAGS="${LDFLAGS}" \
+CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
   "${src}/configure" \
     --prefix="${INSTALL_DIR}" \
     --libdir="${INSTALL_DIR}/lib" \
@@ -32,6 +53,5 @@ make install
 log "post-processing"
 post_process_install
 
-# Mingw libtool produces libgmp-10.dll (hyphen, not dot).
-WINDOWS_DLL_OVERRIDE="libgmp-10.dll" assert_soname "libgmp.so.10"
+assert_soname "libgmp.so.10"
 log "done"
