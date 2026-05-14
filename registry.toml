@@ -453,7 +453,7 @@ soname = "libsoxr.so.0"
 status = "built"
 source = "soxr"
 # license: LGPL-2.1-or-later
-windows = "libsoxr-0.dll"
+windows = "libsoxr.dll"
 
 [[libcommon.libs]]
 soname = "libdav1d.so.7"
