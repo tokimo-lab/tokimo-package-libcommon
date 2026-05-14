@@ -136,6 +136,7 @@ for entry in data.get("source", []):
 
     version = entry["version"]
     url = entry["url"]
+    mirrors = entry.get("mirrors", []) or []
     want_sha = entry["sha256"]
     layer = entry.get("layer", "?")
 
@@ -166,41 +167,47 @@ for entry in data.get("source", []):
             archive.unlink()
 
     if need_download:
-        print(f"[fetch]   downloading {url}", flush=True)
         tmp = archive.with_suffix(archive.suffix + ".part")
         if tmp.exists():
             tmp.unlink()
-        # Some mirrors (freedesktop.org CDN, sourceforge) intermittently
-        # block requests by User-Agent. We rotate through a small list of
-        # UAs across retries so a single bad UA cannot wedge the build.
-        # Default Python UA works for most sites; the others are kept
-        # broadly compatible.
         uas = [
             "Python-urllib/3.x",
             "Wget/1.21",
             "curl/8.0",
             "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
         ]
+        # Try primary URL then any mirrors; for each URL rotate UAs across
+        # attempts. A 4xx ban tends to be IP+UA scoped, so a different UA
+        # may slip through; if every UA on a given host still 4xxs (host-
+        # level ban / CDN block) we fall through to the next mirror.
+        candidate_urls = [url, *mirrors]
+        delays = [3, 6, 12, 24]  # per-URL: 4 attempts ~45s, then move on
         last_err = None
-        # 8 attempts with exponential-ish backoff: 5, 10, 20, 30, 45, 60, 90, 120
-        delays = [5, 10, 20, 30, 45, 60, 90, 120]
-        for attempt in range(len(delays)):
-            ua = uas[attempt % len(uas)]
-            req = urllib.request.Request(url, headers={"User-Agent": ua})
-            try:
-                with urllib.request.urlopen(req) as resp, open(tmp, "wb") as out:
-                    shutil.copyfileobj(resp, out)
-                last_err = None
+        downloaded = False
+        for ui, candidate in enumerate(candidate_urls):
+            label = "primary" if ui == 0 else f"mirror {ui}"
+            print(f"[fetch]   downloading {candidate}  ({label})", flush=True)
+            for attempt in range(len(delays)):
+                ua = uas[attempt % len(uas)]
+                req = urllib.request.Request(candidate, headers={"User-Agent": ua})
+                try:
+                    with urllib.request.urlopen(req) as resp, open(tmp, "wb") as out:
+                        shutil.copyfileobj(resp, out)
+                    last_err = None
+                    downloaded = True
+                    break
+                except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ConnectionError, OSError) as e:
+                    last_err = e
+                    if tmp.exists():
+                        tmp.unlink()
+                    wait = delays[attempt]
+                    print(f"[fetch]   attempt {attempt+1}/{len(delays)} (UA={ua!r}) failed: {e}; retrying in {wait}s", flush=True)
+                    time.sleep(wait)
+            if downloaded:
                 break
-            except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ConnectionError, OSError) as e:
-                last_err = e
-                if tmp.exists():
-                    tmp.unlink()
-                wait = delays[attempt]
-                print(f"[fetch]   attempt {attempt+1}/{len(delays)} (UA={ua!r}) failed: {e}; retrying in {wait}s", flush=True)
-                time.sleep(wait)
-        if last_err is not None:
-            raise SystemExit(f"download failed for {name} after {len(delays)} attempts: {last_err}")
+            print(f"[fetch]   {label} exhausted, trying next URL", flush=True)
+        if not downloaded:
+            raise SystemExit(f"download failed for {name} after exhausting {len(candidate_urls)} URL(s): {last_err}")
         actual = sha256_file(tmp)
         if actual != want_sha:
             tmp.unlink()

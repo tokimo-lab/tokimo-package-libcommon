@@ -281,6 +281,11 @@ build = "libxcb"
 name = "fontconfig"
 version = "2.15.0"
 url = "https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.15.0.tar.xz"
+# freedesktop.org's CDN intermittently 418s CI runners (rate-limit). osuosl
+# mirrors the same release tarball byte-for-byte (BLFS conglomeration).
+mirrors = [
+  "https://ftp.osuosl.org/pub/blfs/conglomeration/fontconfig/fontconfig-2.15.0.tar.xz",
+]
 sha256 = "63a0658d0e06e0fa886106452b58ef04f21f58202ea02a94c39de0d3335d7c0e"
 layer = "L3"
 build = "fontconfig"
