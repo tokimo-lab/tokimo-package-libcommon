@@ -175,7 +175,6 @@ for entry in data.get("source", []):
                 "--max-time", "600",
                 "--retry", "5",
                 "--retry-delay", "5",
-                "--retry-all-errors",
                 "-o", str(tmp),
                 url,
             ],
