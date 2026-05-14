@@ -72,13 +72,13 @@ windows = "libbrotlidec.dll"
 soname = "libicudata.so.74"
 status = "built"
 source = "icu"
-windows = "libicudt74.dll"
+windows = "icudt74.dll"
 
 [[libcommon.libs]]
 soname = "libicuuc.so.74"
 status = "built"
 source = "icu"
-windows = "libicuuc74.dll"
+windows = "icuuc74.dll"
 
 [[libcommon.libs]]
 soname = "libunistring.so.5"

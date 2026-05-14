@@ -58,16 +58,31 @@ rm -f "${INSTALL_DIR}/lib/pkgconfig/icu-io.pc" 2>/dev/null || true
 drop_lib libicuio
 drop_lib libicutest
 drop_lib libicutu
+# Windows: ICU produces icuXX74.dll (no `lib` prefix, version embedded
+# in name) under install/bin instead of libfoo.so.74 under install/lib.
+# Drop everything that isn't icudt74 / icuuc74 explicitly.
+if is_windows; then
+  for prefix in icuin icuio icutu icutest; do
+    rm -f "${INSTALL_DIR}/bin/${prefix}"*.dll 2>/dev/null || true
+    rm -f "${INSTALL_DIR}/lib/lib${prefix}".dll.a 2>/dev/null || true
+  done
+fi
 # Keep registry-listed icudata + icuuc only. Drop ICU's bin/sbin tools.
 rm -rf "${INSTALL_DIR}/sbin" 2>/dev/null || true
 for tool in icuinfo icuexportdata makeconv genccode genbrk gencfu gencnval \
             gendict genrb genuca makeconv pkgdata uconv derb; do
   rm -f "${INSTALL_DIR}/bin/${tool}" 2>/dev/null || true
+  rm -f "${INSTALL_DIR}/bin/${tool}.exe" 2>/dev/null || true
 done
 
 log "post-processing"
 post_process_install
 
-assert_soname "libicudata.so.74"
-assert_soname "libicuuc.so.74"
+if is_windows; then
+  WINDOWS_DLL_OVERRIDE="icudt74.dll" assert_soname "libicudata.so.74"
+  WINDOWS_DLL_OVERRIDE="icuuc74.dll" assert_soname "libicuuc.so.74"
+else
+  assert_soname "libicudata.so.74"
+  assert_soname "libicuuc.so.74"
+fi
 log "done"
