@@ -98,8 +98,6 @@ common_flags=(
 )
 
 linux_extras=(
-  --enable-libdrm
-  --enable-vaapi
   --enable-nvenc
   --enable-ffnvcodec
 )
