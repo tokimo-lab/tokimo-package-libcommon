@@ -8,3 +8,6 @@
 err.log
 /.tmp-waveb/
 .j*.log
+.lin.log*
+.mac.log*
+.win.log*
