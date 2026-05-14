@@ -17,6 +17,16 @@ source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 src="$(source_dir lame)"
 build="$(prepare_build_dir lame)"
 
+# lame 3.100 ships include/libmp3lame.sym which lists `lame_init_old`,
+# but that symbol is no longer defined in the source. GNU ld silently
+# tolerates the missing export, but Apple ld64 and mingw ld fail the
+# link with "Undefined symbols: _lame_init_old". Drop the stale entry
+# from the export list before configure. Patch is idempotent.
+if grep -q '^lame_init_old$' "${src}/include/libmp3lame.sym"; then
+  log "patching: remove stale lame_init_old export (not defined in 3.100)"
+  sed -i.bak '/^lame_init_old$/d' "${src}/include/libmp3lame.sym"
+fi
+
 log "configuring"
 cd "${build}"
 CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
