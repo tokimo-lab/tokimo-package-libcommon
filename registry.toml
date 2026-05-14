@@ -461,3 +461,104 @@ status = "built"
 source = "dav1d"
 # license: BSD-2-Clause
 windows = "libdav1d.dll"
+
+# ────────────────────────────────────────────────────────────────────────────
+# L8 — ffmpeg video encoder leaves (Wave B, mostly GPL — bumps libcommon
+# license to GPL-2.0+ when consumers enable any of these via ffmpeg).
+# ────────────────────────────────────────────────────────────────────────────
+
+[[libcommon.libs]]
+soname = "libx264.so.164"
+status = "built"
+source = "x264"
+# license: GPL-2.0-or-later
+windows = "libx264-164.dll"
+
+[[libcommon.libs]]
+soname = "libx265.so.215"
+status = "built"
+source = "x265"
+# license: GPL-2.0-or-later
+windows = "libx265.dll"
+
+[[libcommon.libs]]
+soname = "libSvtAv1Enc.so.3"
+status = "built"
+source = "SVT-AV1"
+# license: BSD-3-Clause (codec) + BSD-2-Clause + PATENTS (AOM)
+windows = "SvtAv1Enc.dll"
+
+[[libcommon.libs]]
+soname = "libvpx.so.10"
+status = "built"
+source = "libvpx"
+# license: BSD-3-Clause + PATENTS (Google)
+# libvpx's own configure on mingw emits libvpx.dll (no version suffix).
+windows = "libvpx.dll"
+
+[[libcommon.libs]]
+soname = "libaom.so.3"
+status = "built"
+source = "libaom"
+# license: BSD-2-Clause + PATENTS (AOM)
+windows = "libaom.dll"
+
+[[libcommon.libs]]
+soname = "libtheoradec.so.1"
+status = "built"
+source = "libtheora"
+# license: BSD-3-Clause
+windows = "libtheoradec-1.dll"
+
+[[libcommon.libs]]
+soname = "libtheoraenc.so.1"
+status = "built"
+source = "libtheora"
+# license: BSD-3-Clause
+windows = "libtheoraenc-1.dll"
+
+# ────────────────────────────────────────────────────────────────────────────
+# L9 — ffmpeg ancillary deps (Wave C, mixed permissive + LGPL).
+# ────────────────────────────────────────────────────────────────────────────
+
+[[libcommon.libs]]
+soname = "libvorbis.so.0"
+status = "built"
+source = "libvorbis"
+# license: BSD-3-Clause
+windows = "libvorbis-0.dll"
+
+[[libcommon.libs]]
+soname = "libvorbisenc.so.2"
+status = "built"
+source = "libvorbis"
+# license: BSD-3-Clause
+windows = "libvorbisenc-2.dll"
+
+[[libcommon.libs]]
+soname = "libass.so.9"
+status = "built"
+source = "libass"
+# license: ISC
+windows = "libass-9.dll"
+
+[[libcommon.libs]]
+soname = "libsrt.so.1.5"
+status = "built"
+source = "libsrt"
+# license: MPL-2.0 (crypto backend = gnutls)
+windows = "srt.dll"
+
+[[libcommon.libs]]
+soname = "libzimg.so.2"
+status = "built"
+source = "libzimg"
+# license: WTFPL
+windows = "libzimg-2.dll"
+
+[[libcommon.libs]]
+soname = "libbluray.so.2"
+status = "built"
+source = "libbluray"
+# license: LGPL-2.1-or-later
+windows = "libbluray-2.dll"
