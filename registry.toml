@@ -517,7 +517,11 @@ soname = "libtheoraenc.so.1"
 status = "built"
 source = "libtheora"
 # license: BSD-3-Clause
-windows = "libtheoraenc-1.dll"
+# On mingw, libtheora autotools merges enc symbols into the combined
+# libtheora-0.dll (the historical pre-split layout); no separate
+# libtheoraenc-1.dll is produced. ffmpeg links theoraenc symbols
+# against libtheora-0.dll on Windows.
+windows = "libtheora-0.dll"
 
 # ────────────────────────────────────────────────────────────────────────────
 # L9 — ffmpeg ancillary deps (Wave C, mixed permissive + LGPL).
