@@ -170,25 +170,37 @@ for entry in data.get("source", []):
         tmp = archive.with_suffix(archive.suffix + ".part")
         if tmp.exists():
             tmp.unlink()
-        # urllib accepts default Python-urllib UA across the mirrors we use
-        # (freedesktop returns 418 to default curl UA, sourceforge returns
-        # 403 to fake browser UAs — both let urllib through). We rely on
-        # socket.setdefaulttimeout(120) above to avoid hangs and implement
-        # an explicit retry loop with backoff.
+        # Some mirrors (freedesktop.org CDN, sourceforge) intermittently
+        # block requests by User-Agent. We rotate through a small list of
+        # UAs across retries so a single bad UA cannot wedge the build.
+        # Default Python UA works for most sites; the others are kept
+        # broadly compatible.
+        uas = [
+            "Python-urllib/3.x",
+            "Wget/1.21",
+            "curl/8.0",
+            "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
+        ]
         last_err = None
-        for attempt in range(1, 6):
+        # 8 attempts with exponential-ish backoff: 5, 10, 20, 30, 45, 60, 90, 120
+        delays = [5, 10, 20, 30, 45, 60, 90, 120]
+        for attempt in range(len(delays)):
+            ua = uas[attempt % len(uas)]
+            req = urllib.request.Request(url, headers={"User-Agent": ua})
             try:
-                urllib.request.urlretrieve(url, str(tmp))
+                with urllib.request.urlopen(req) as resp, open(tmp, "wb") as out:
+                    shutil.copyfileobj(resp, out)
                 last_err = None
                 break
-            except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as e:
+            except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ConnectionError, OSError) as e:
                 last_err = e
                 if tmp.exists():
                     tmp.unlink()
-                print(f"[fetch]   attempt {attempt}/5 failed: {e}; retrying in {attempt*5}s", flush=True)
-                time.sleep(attempt * 5)
+                wait = delays[attempt]
+                print(f"[fetch]   attempt {attempt+1}/{len(delays)} (UA={ua!r}) failed: {e}; retrying in {wait}s", flush=True)
+                time.sleep(wait)
         if last_err is not None:
-            raise SystemExit(f"download failed for {name}: {last_err}")
+            raise SystemExit(f"download failed for {name} after {len(delays)} attempts: {last_err}")
         actual = sha256_file(tmp)
         if actual != want_sha:
             tmp.unlink()
