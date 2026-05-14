@@ -489,7 +489,7 @@ source = "SVT-AV1"
 windows = "SvtAv1Enc.dll"
 
 [[libcommon.libs]]
-soname = "libvpx.so.10"
+soname = "libvpx.so.9"
 status = "built"
 source = "libvpx"
 # license: BSD-3-Clause + PATENTS (Google)

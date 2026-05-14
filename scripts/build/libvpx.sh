@@ -59,6 +59,6 @@ post_process_install
 if is_windows; then
   log "windows: static-only build, no libvpx.dll artifact"
 else
-  assert_soname "libvpx.so.10"
+  assert_soname "libvpx.so.9"
 fi
 log "done"
