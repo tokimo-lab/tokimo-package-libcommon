@@ -32,7 +32,9 @@ fi
 if [[ ! -f "${src}/.libcommon-autoreconf-done" ]]; then
   if ! grep -q 'm4_pattern_allow.*AS_AC_EXPAND' "${src}/configure.ac"; then
     log "patching configure.ac: whitelist AS_AC_EXPAND macro"
-    sed -i.bak '1i m4_pattern_allow([AS_AC_EXPAND])' "${src}/configure.ac"
+    # Prepend via temp file — BSD sed's `1i\` syntax differs from GNU's.
+    { printf 'm4_pattern_allow([AS_AC_EXPAND])\n'; cat "${src}/configure.ac"; } > "${src}/configure.ac.new"
+    mv "${src}/configure.ac.new" "${src}/configure.ac"
   fi
   if ! grep -q '^encoder_sources = info.c' "${src}/lib/Makefile.am"; then
     log "patching lib/Makefile.am: add info.c to encoder_sources"
