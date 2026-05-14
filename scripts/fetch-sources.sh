@@ -70,22 +70,54 @@ def sha256_file(p: Path) -> str:
             h.update(chunk)
     return h.hexdigest()
 
+def _tar_strip1(archive: Path, dest: Path) -> None:
+    """Native-Python tar extractor with --strip-components=1 semantics.
+
+    Why not just `subprocess.run(['tar', '--strip-components=1', ...])`?
+    On msys2 (Windows runner) the external tar.exe + xz.exe pipeline forks
+    once per archived file thanks to msys2's POSIX emulation, which can
+    stretch a sub-second extract to tens of minutes on a 5 MB tarball.
+    Python's stdlib tarfile module reads the archive natively in-process,
+    so it scales linearly with archive size on all three platforms.
+    """
+    import tarfile
+    name = archive.name
+    if name.endswith(".tar.gz") or name.endswith(".tgz"):
+        mode = "r:gz"
+    elif name.endswith(".tar.xz"):
+        mode = "r:xz"
+    elif name.endswith(".tar.bz2"):
+        mode = "r:bz2"
+    elif name.endswith(".tar.zst") or name.endswith(".tar.zstd"):
+        mode = "r:*"  # fallback to external for zstd (none in our deps.toml)
+    else:
+        raise RuntimeError(f"unknown archive type: {name}")
+    with tarfile.open(archive, mode) as tf:
+        members = []
+        for m in tf.getmembers():
+            parts = m.name.replace("\\", "/").split("/", 1)
+            if len(parts) < 2 or not parts[1]:
+                continue  # strip the top-level dir itself
+            m.name = parts[1]
+            members.append(m)
+        # Use filter='data' (py3.12+) for safer extraction when available.
+        try:
+            tf.extractall(dest, members=members, filter="data")
+        except TypeError:
+            tf.extractall(dest, members=members)
+
 def extract(archive: Path, dest: Path) -> None:
     """Extract archive into dest/, stripping the top-level directory."""
     dest.mkdir(parents=True, exist_ok=True)
     name = archive.name
-    if name.endswith(".tar.gz") or name.endswith(".tgz"):
-        opt = "xzf"
-    elif name.endswith(".tar.xz"):
-        opt = "xJf"
-    elif name.endswith(".tar.bz2"):
-        opt = "xjf"
-    elif name.endswith(".tar.zst") or name.endswith(".tar.zstd"):
-        opt = "x --zstd -f"
-    else:
-        raise RuntimeError(f"unknown archive type: {name}")
-    cmd = ["tar"] + opt.split() + [str(archive), "-C", str(dest), "--strip-components=1"]
-    subprocess.run(cmd, check=True)
+    if name.endswith(".tar.zst") or name.endswith(".tar.zstd"):
+        # zstd needs --zstd on tar < 1.31 or a recent libarchive; safest
+        # is to delegate to system tar which both Linux/macOS handle and
+        # msys2 has via mingw-w64-x86_64-zstd shipped with our toolchain.
+        cmd = ["tar", "--zstd", "-xf", str(archive), "-C", str(dest), "--strip-components=1"]
+        subprocess.run(cmd, check=True)
+        return
+    _tar_strip1(archive, dest)
 
 for entry in data.get("source", []):
     name = entry["name"]
@@ -161,7 +193,7 @@ for entry in data.get("source", []):
 
     if target.exists():
         shutil.rmtree(target)
-    print(f"[fetch]   extracting → {target}")
+    print(f"[fetch]   extracting → {target}", flush=True)
     extract(archive, target)
     marker.write_text(want_sha + "\n")
 
