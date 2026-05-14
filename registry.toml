@@ -386,6 +386,22 @@ linux = "skip"
 macos = "skip"
 windows = "libwinpthread-1.dll"
 
+[[libcommon.libs]]
+soname = "libintl-8.dll"
+status = "built"
+source = "mingw-runtime"
+linux = "skip"
+macos = "skip"
+windows = "libintl-8.dll"
+
+[[libcommon.libs]]
+soname = "libiconv-2.dll"
+status = "built"
+source = "mingw-runtime"
+linux = "skip"
+macos = "skip"
+windows = "libiconv-2.dll"
+
 # ────────────────────────────────────────────────────────────────────────────
 # 系统库（永不打包，由宿主 glibc / gcc-runtime 提供）
 # CI 检查时若发现这些 SONAME 出现在任何包内 → 报错。

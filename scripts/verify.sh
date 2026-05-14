@@ -131,7 +131,8 @@ WINDOWS_SYSTEM_DLLS = {
     # User/system
     "user32.dll", "gdi32.dll", "advapi32.dll", "shell32.dll", "ole32.dll",
     "oleaut32.dll", "shlwapi.dll", "shcore.dll", "comdlg32.dll", "comctl32.dll",
-    "imm32.dll", "winmm.dll", "version.dll", "psapi.dll",
+    "imm32.dll", "winmm.dll", "version.dll", "psapi.dll", "msimg32.dll",
+    "dwmapi.dll", "uxtheme.dll", "usp10.dll",
     # Networking / security
     "ws2_32.dll", "wsock32.dll", "iphlpapi.dll", "crypt32.dll", "secur32.dll",
     "bcrypt.dll", "ncrypt.dll", "wininet.dll", "winhttp.dll", "dnsapi.dll",

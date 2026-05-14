@@ -390,7 +390,8 @@ ship_mingw_runtime() {
   # MSYSTEM_PREFIX is set by the msys2 shell launcher: /mingw64 for MINGW64.
   local prefix="${MSYSTEM_PREFIX:-/mingw64}"
   local dll
-  for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll libgomp-1.dll; do
+  for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll libgomp-1.dll \
+             libintl-8.dll libiconv-2.dll; do
     if [[ -f "${prefix}/bin/${dll}" ]]; then
       cp -f "${prefix}/bin/${dll}" "${bindir}/${dll}"
       chmod 0755 "${bindir}/${dll}"

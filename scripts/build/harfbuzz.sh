@@ -40,7 +40,9 @@ meson install -C "${build}"
 # libharfbuzz.so.0 — drop the rest so verify.sh stays happy.
 shopt -s nullglob
 for f in "${INSTALL_DIR}/lib"/libharfbuzz-*.so* \
-         "${INSTALL_DIR}/lib"/libharfbuzz-*.dylib; do
+         "${INSTALL_DIR}/lib"/libharfbuzz-*.dylib \
+         "${INSTALL_DIR}/bin"/libharfbuzz-*-*.dll \
+         "${INSTALL_DIR}/lib"/libharfbuzz-*.dll.a; do
   rm -f "${f}"
 done
 for pc in "${INSTALL_DIR}/lib/pkgconfig"/harfbuzz-*.pc; do rm -f "${pc}"; done
