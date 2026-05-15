@@ -75,7 +75,6 @@ common_flags=(
   --disable-txtpages
   --enable-gpl
   --enable-version3
-  --enable-pthreads
   --enable-pic
   # codecs / muxers via our L8/L9 libs
   --enable-libx264
@@ -98,11 +97,13 @@ common_flags=(
 )
 
 linux_extras=(
+  --enable-pthreads
   --enable-nvenc
   --enable-ffnvcodec
 )
 
 macos_extras=(
+  --enable-pthreads
   --enable-videotoolbox
   --enable-audiotoolbox
   # vf_transpose_vt source is referenced by allfilters.c but its .o is
@@ -113,6 +114,7 @@ macos_extras=(
 )
 
 windows_extras=(
+  --enable-w32threads
   --enable-d3d11va
   --enable-dxva2
   --enable-nvenc
