@@ -77,12 +77,5 @@ log "post-processing"
 post_process_install
 
 assert_soname "libtheoradec.so.1"
-# On mingw, libtheora 1.1.1 builds a combined libtheora-0.dll (decoder+encoder)
-# and a decoder-only libtheoradec-1.dll, but no standalone libtheoraenc-1.dll.
-# Map the encoder SONAME to the combined DLL.
-if is_windows; then
-  WINDOWS_DLL_OVERRIDE="libtheora-0.dll" assert_soname "libtheoraenc.so.1"
-else
-  assert_soname "libtheoraenc.so.1"
-fi
+assert_soname "libtheoraenc.so.1"
 log "done"
