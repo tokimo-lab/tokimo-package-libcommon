@@ -486,7 +486,7 @@ soname = "libSvtAv1Enc.so.2"
 status = "built"
 source = "SVT-AV1"
 # license: BSD-3-Clause (codec) + BSD-2-Clause + PATENTS (AOM)
-windows = "SvtAv1Enc.dll"
+windows = "libSvtAv1Enc.dll"
 
 [[libcommon.libs]]
 soname = "libvpx.so.9"
@@ -573,7 +573,7 @@ soname = "libsrt.so.1.5"
 status = "built"
 source = "libsrt"
 # license: MPL-2.0 (crypto backend = gnutls)
-windows = "srt.dll"
+windows = "libsrt.dll"
 
 [[libcommon.libs]]
 soname = "libzimg.so.2"
