@@ -137,6 +137,8 @@ WINDOWS_SYSTEM_DLLS = {
     "ws2_32.dll", "wsock32.dll", "iphlpapi.dll", "crypt32.dll", "secur32.dll",
     "bcrypt.dll", "ncrypt.dll", "wininet.dll", "winhttp.dll", "dnsapi.dll",
     "userenv.dll", "rpcrt4.dll",
+    # Multimedia / capture (referenced by ffmpeg's avdevice grabbers)
+    "avicap32.dll", "msacm32.dll", "vfw32.dll",
 }
 
 def is_windows_system_dll(name: str) -> bool:
