@@ -127,6 +127,10 @@ windows_extras=(
   --enable-amf
   --target-os=mingw32
   --arch=x86_64
+  # mingw auto-detects libbz2 from the build environment and ffmpeg links
+  # it dynamically (avformat → libbz2-1.dll), but we don't ship libbz2 and
+  # nothing in our pipeline needs it. Disable to keep the dep closure tight.
+  --disable-bzlib
 )
 
 log "configuring (jellyfin-ffmpeg 7.0.2-7)"
