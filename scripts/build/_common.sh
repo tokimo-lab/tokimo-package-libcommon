@@ -443,17 +443,14 @@ post_process_install_windows() {
     done
   fi
 
-  # Drop libtool sidecars and pure-static archives, but keep import libs
-  # (libfoo.dll.a). bash glob '*.a' DOES match 'libfoo.dll.a' so we have
-  # to filter in a loop.
+  # Drop libtool sidecars only. Keep both *.dll.a (import libs for shared
+  # DLLs) AND plain *.a (static archives) — some libs like libvpx are
+  # static-only on mingw (libvpx configure rejects --enable-shared on
+  # mingw), and ffmpeg needs to link them via -lvpx. mingw ld prefers
+  # *.dll.a over *.a when both exist, so keeping static .a doesn't break
+  # shared linkage either.
   shopt -s nullglob
   rm -f "${libdir}"/*.la
-  for f in "${libdir}"/*.a; do
-    case "${f}" in
-      *.dll.a) ;;     # import lib — keep
-      *) rm -f "${f}" ;;
-    esac
-  done
   shopt -u nullglob
 
   # Normalize lib64 → lib (uncommon on mingw but possible from cmake).
