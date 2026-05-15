@@ -124,12 +124,22 @@ windows_extras=(
 
 log "configuring (jellyfin-ffmpeg 7.0.2-7)"
 cd "${build}"
+configure_rc=0
 if is_linux; then
-  "${src}/configure" "${common_flags[@]}" "${linux_extras[@]}"
+  "${src}/configure" "${common_flags[@]}" "${linux_extras[@]}" || configure_rc=$?
 elif is_macos; then
-  "${src}/configure" "${common_flags[@]}" "${macos_extras[@]}"
+  "${src}/configure" "${common_flags[@]}" "${macos_extras[@]}" || configure_rc=$?
 elif is_windows; then
-  "${src}/configure" "${common_flags[@]}" "${windows_extras[@]}"
+  "${src}/configure" "${common_flags[@]}" "${windows_extras[@]}" || configure_rc=$?
+fi
+if [[ ${configure_rc} -ne 0 ]]; then
+  log "configure failed (rc=${configure_rc}); dumping last 200 lines of ffbuild/config.log"
+  if [[ -f "${build}/ffbuild/config.log" ]]; then
+    tail -n 200 "${build}/ffbuild/config.log" || true
+  else
+    log "ffbuild/config.log not found"
+  fi
+  exit "${configure_rc}"
 fi
 
 log "building (this is slow — ~10-20min)"
