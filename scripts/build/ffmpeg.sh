@@ -135,9 +135,12 @@ elif is_windows; then
   "${src}/configure" "${common_flags[@]}" "${windows_extras[@]}" || configure_rc=$?
 fi
 if [[ ${configure_rc} -ne 0 ]]; then
-  log "configure failed (rc=${configure_rc}); dumping last 200 lines of ffbuild/config.log"
+  log "configure failed (rc=${configure_rc})"
   if [[ -f "${build}/ffbuild/config.log" ]]; then
-    tail -n 200 "${build}/ffbuild/config.log" || true
+    log "===== grep ERROR (with context) from ffbuild/config.log ====="
+    grep -n -B3 -A10 -E "^ERROR:|cannot find|undefined reference|not found" "${build}/ffbuild/config.log" || true
+    log "===== tail -n 400 of ffbuild/config.log ====="
+    tail -n 400 "${build}/ffbuild/config.log" || true
   else
     log "ffbuild/config.log not found"
   fi
