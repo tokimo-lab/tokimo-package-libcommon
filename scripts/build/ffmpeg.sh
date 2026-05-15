@@ -65,7 +65,6 @@ fi
 common_flags=(
   --prefix="${INSTALL_DIR}"
   --libdir="${INSTALL_DIR}/lib"
-  --shlibdir="${INSTALL_DIR}/lib"
   --enable-shared
   --disable-static
   --disable-doc
@@ -97,12 +96,14 @@ common_flags=(
 )
 
 linux_extras=(
+  --shlibdir="${INSTALL_DIR}/lib"
   --enable-pthreads
   --enable-nvenc
   --enable-ffnvcodec
 )
 
 macos_extras=(
+  --shlibdir="${INSTALL_DIR}/lib"
   --enable-pthreads
   --enable-videotoolbox
   --enable-audiotoolbox
@@ -114,6 +115,10 @@ macos_extras=(
 )
 
 windows_extras=(
+  # On Windows we want .dll files in install/bin alongside all deps so the
+  # consumer's PATH resolves them. (Unix puts .so in lib; Windows puts .dll
+  # in bin per ffmpeg/libtool/mingw convention.)
+  --shlibdir="${INSTALL_DIR}/bin"
   --enable-w32threads
   --enable-d3d11va
   --enable-dxva2
@@ -158,13 +163,25 @@ post_process_install
 
 # ─── SONAME assertions ─────────────────────────────────────────────────────
 # These match what jellyfin-ffmpeg 7.0.2 (= ffmpeg n7.0.x) emits.
-assert_soname "libavcodec.so.61"
-assert_soname "libavformat.so.61"
-assert_soname "libavutil.so.59"
-assert_soname "libavfilter.so.10"
-assert_soname "libswscale.so.8"
-assert_soname "libswresample.so.5"
-assert_soname "libpostproc.so.58"
-assert_soname "libavdevice.so.61"
+# On mingw, ffmpeg drops the "lib" prefix: libavcodec.so.61 → avcodec-61.dll.
+if is_windows; then
+  WINDOWS_DLL_OVERRIDE="avcodec-61.dll"    assert_soname "libavcodec.so.61"
+  WINDOWS_DLL_OVERRIDE="avformat-61.dll"   assert_soname "libavformat.so.61"
+  WINDOWS_DLL_OVERRIDE="avutil-59.dll"     assert_soname "libavutil.so.59"
+  WINDOWS_DLL_OVERRIDE="avfilter-10.dll"   assert_soname "libavfilter.so.10"
+  WINDOWS_DLL_OVERRIDE="swscale-8.dll"     assert_soname "libswscale.so.8"
+  WINDOWS_DLL_OVERRIDE="swresample-5.dll"  assert_soname "libswresample.so.5"
+  WINDOWS_DLL_OVERRIDE="postproc-58.dll"   assert_soname "libpostproc.so.58"
+  WINDOWS_DLL_OVERRIDE="avdevice-61.dll"   assert_soname "libavdevice.so.61"
+else
+  assert_soname "libavcodec.so.61"
+  assert_soname "libavformat.so.61"
+  assert_soname "libavutil.so.59"
+  assert_soname "libavfilter.so.10"
+  assert_soname "libswscale.so.8"
+  assert_soname "libswresample.so.5"
+  assert_soname "libpostproc.so.58"
+  assert_soname "libavdevice.so.61"
+fi
 
 log "done"
