@@ -666,7 +666,8 @@ soname = "libtiff.so.6"
 status = "built"
 source = "libtiff"
 # license: libtiff (BSD-style)
-windows = "libtiff-6.dll"
+# cmake builds libtiff with no version suffix on mingw → libtiff.dll
+windows = "libtiff.dll"
 
 [[libcommon.libs]]
 soname = "libfftw3.so.3"

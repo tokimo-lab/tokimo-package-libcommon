@@ -19,6 +19,7 @@ cmake "${src}" \
   -Dtiff-tests=OFF \
   -Dtiff-contrib=OFF \
   -Dtiff-docs=OFF \
+  -Dcxx=OFF \
   -Dlzma=ON \
   -Dzstd=ON \
   -Dwebp=ON \
@@ -38,7 +39,7 @@ log "post-processing"
 post_process_install
 
 if is_windows; then
-  WINDOWS_DLL_OVERRIDE="libtiff-6.dll" assert_soname "libtiff.so.6"
+  WINDOWS_DLL_OVERRIDE="libtiff.dll" assert_soname "libtiff.so.6"
 else
   assert_soname "libtiff.so.6"
 fi
