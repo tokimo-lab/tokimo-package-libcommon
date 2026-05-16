@@ -549,7 +549,23 @@ sha256 = "07da67a62df5c92b5772b17658b3fd22fbcf1799fb7e6d62589503b1ee48924c"
 layer = "L11"
 build = "ffmpeg"
 
-# ─── L12 (Wave F: libvips deps — fftw3 + orc, autotools/meson leaves) ──────
+# ─── L12 (Wave F: libvips deps — libjpeg-turbo + libtiff + fftw3 + orc) ────
+
+[[source]]
+name = "libjpeg-turbo"
+version = "3.0.4"
+url = "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.0.4/libjpeg-turbo-3.0.4.tar.gz"
+sha256 = "99130559e7d62e8d695f2c0eaeef912c5828d5b84a0537dcb24c9678c9d5b76b"
+layer = "L12"
+build = "libjpeg-turbo"
+
+[[source]]
+name = "libtiff"
+version = "4.7.0"
+url = "https://download.osgeo.org/libtiff/tiff-4.7.0.tar.gz"
+sha256 = "67160e3457365ab96c5b3286a0903aa6e78bdc44c4bc737d2e486bcecb6ba976"
+layer = "L12"
+build = "libtiff"
 
 [[source]]
 name = "fftw"

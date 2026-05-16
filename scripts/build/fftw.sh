@@ -21,6 +21,11 @@ build="$(prepare_build_dir fftw)"
 
 log "configuring"
 cd "${build}"
+# --with-combined-threads: bake the threading layer INTO libfftw3.so.3 so we
+# don't have to ship a separate libfftw3_threads. This also avoids mingw's
+# libtool refusing to link libfftw3_threads.la without -no-undefined (it
+# references symbols in libfftw3 which mingw libtool can't resolve at
+# library-link time).
 CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
   "${src}/configure" \
     --prefix="${INSTALL_DIR}" \
@@ -30,6 +35,7 @@ CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
     --disable-fortran \
     --disable-doc \
     --enable-threads \
+    --with-combined-threads \
     --with-our-malloc
 
 log "building"

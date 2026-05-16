@@ -61,8 +61,8 @@ CFLAGS="${CFLAGS}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
     -Dtiff=enabled \
     -Dzlib=enabled \
     -Dopenjpeg=enabled \
-    -Dpangocairo=enabled \
-    -Dfontconfig=enabled \
+    -Dpangocairo=disabled \
+    -Dfontconfig=disabled \
     -Dheif=disabled \
     -Drsvg=disabled \
     -Dcgif=disabled \

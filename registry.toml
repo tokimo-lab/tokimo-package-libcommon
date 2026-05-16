@@ -161,6 +161,12 @@ source = "libwebp"
 windows = "libwebpmux-3.dll"
 
 [[libcommon.libs]]
+soname = "libwebpdemux.so.2"
+status = "built"
+source = "libwebp"
+windows = "libwebpdemux-2.dll"
+
+[[libcommon.libs]]
 soname = "libsharpyuv.so.0"
 status = "built"
 source = "libwebp"
@@ -649,18 +655,26 @@ windows = "avdevice-61.dll"
 # ────────────────────────────────────────────────────────────────────────────
 
 [[libcommon.libs]]
+soname = "libjpeg.so.62"
+status = "built"
+source = "libjpeg-turbo"
+# license: IJG (BSD-style) + libjpeg-turbo (BSD-3-Clause)
+windows = "libjpeg-62.dll"
+
+[[libcommon.libs]]
+soname = "libtiff.so.6"
+status = "built"
+source = "libtiff"
+# license: libtiff (BSD-style)
+windows = "libtiff-6.dll"
+
+[[libcommon.libs]]
 soname = "libfftw3.so.3"
 status = "built"
 source = "fftw"
 # license: GPL-2.0-or-later (bumps libcommon aggregate to GPL via libvips)
+# Threads are baked in via --with-combined-threads; no separate libfftw3_threads.
 windows = "libfftw3-3.dll"
-
-[[libcommon.libs]]
-soname = "libfftw3_threads.so.3"
-status = "built"
-source = "fftw"
-# license: GPL-2.0-or-later
-windows = "libfftw3_threads-3.dll"
 
 [[libcommon.libs]]
 soname = "liborc-0.4.so.0"
