@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# libwebp 1.4.0 — autotools. Produces libsharpyuv + libwebp + libwebpmux.
-# We do NOT ship libwebpdemux / libwebpdecoder (libvips territory).
+# libwebp 1.4.0 — autotools. Produces libsharpyuv + libwebp + libwebpmux + libwebpdemux.
 LIB_NAME="libwebp"
 source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
@@ -16,7 +15,7 @@ CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" \
     --enable-shared \
     --disable-static \
     --enable-libwebpmux \
-    --disable-libwebpdemux \
+    --enable-libwebpdemux \
     --disable-libwebpdecoder \
     --disable-libwebpextras \
     --disable-gl \
@@ -32,10 +31,9 @@ make -j"${NPROC}"
 log "installing"
 make install
 
-# Defensive: drop any decoder/demux that slipped through despite configure flags.
-drop_lib libwebpdemux
+# Defensive: drop the standalone decoder lib (libwebpdecoder duplicates symbols
+# from libwebp.so and we never need it separately).
 drop_lib libwebpdecoder
-drop_pc libwebpdemux
 drop_pc libwebpdecoder
 
 log "post-processing"
@@ -44,4 +42,5 @@ post_process_install
 assert_soname "libsharpyuv.so.0"
 assert_soname "libwebp.so.7"
 assert_soname "libwebpmux.so.3"
+assert_soname "libwebpdemux.so.2"
 log "done"

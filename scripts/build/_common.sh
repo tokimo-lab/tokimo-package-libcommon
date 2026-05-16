@@ -65,7 +65,7 @@ export CXXFLAGS="${CXXFLAGS:--O2 -fPIC -pipe}"
 # would expand it inside the shell and emit a literal "RIGIN" rpath).
 export CPPFLAGS="${CPPFLAGS:-} -I${INSTALL_DIR}/include"
 if is_linux; then
-  export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -L${INSTALL_DIR}/lib64 -Wl,-z,noseparate-code"
+  export LDFLAGS="${LDFLAGS:-} -L${INSTALL_DIR}/lib -L${INSTALL_DIR}/lib64 -Wl,-rpath-link,${INSTALL_DIR}/lib -Wl,-z,noseparate-code"
 elif is_macos; then
   # macOS ld64: no -z,noseparate-code; no lib64 (macOS only uses lib).
   # Add absolute rpath so configure AC_RUN_IFELSE tests can dyld-load

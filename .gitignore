@@ -11,3 +11,4 @@ err.log
 .lin.log*
 .mac.log*
 .win.log*
+.ci-logs/

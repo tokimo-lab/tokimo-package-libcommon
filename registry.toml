@@ -26,7 +26,7 @@ schema_version = 1
 # 当前 release: v1.0.0 — 三平台 (linux-x86_64 / macos-arm64 / windows-x86_64)
 # ────────────────────────────────────────────────────────────────────────────
 [libcommon]
-version = "1.0.0"
+version = "1.2.0"
 platforms = ["linux-x86_64", "macos-arm64", "windows-x86_64"]
 
 # 基础压缩 / 编码
@@ -159,6 +159,12 @@ soname = "libwebpmux.so.3"
 status = "built"
 source = "libwebp"
 windows = "libwebpmux-3.dll"
+
+[[libcommon.libs]]
+soname = "libwebpdemux.so.2"
+status = "built"
+source = "libwebp"
+windows = "libwebpdemux-2.dll"
 
 [[libcommon.libs]]
 soname = "libsharpyuv.so.0"
@@ -643,3 +649,58 @@ soname = "libavdevice.so.61"
 status = "built"
 source = "jellyfin-ffmpeg"
 windows = "avdevice-61.dll"
+
+# ────────────────────────────────────────────────────────────────────────────
+# L12 — libvips compute deps (Wave F)
+# ────────────────────────────────────────────────────────────────────────────
+
+[[libcommon.libs]]
+soname = "libjpeg.so.62"
+status = "built"
+source = "libjpeg-turbo"
+# license: IJG (BSD-style) + libjpeg-turbo (BSD-3-Clause)
+windows = "libjpeg-62.dll"
+
+[[libcommon.libs]]
+soname = "libtiff.so.6"
+status = "built"
+source = "libtiff"
+# license: libtiff (BSD-style)
+# cmake builds libtiff with no version suffix on mingw → libtiff.dll
+windows = "libtiff.dll"
+
+[[libcommon.libs]]
+soname = "libfftw3.so.3"
+status = "built"
+source = "fftw"
+# license: GPL-2.0-or-later (bumps libcommon aggregate to GPL via libvips)
+# Threads are baked in via --with-combined-threads; no separate libfftw3_threads.
+windows = "libfftw3-3.dll"
+
+[[libcommon.libs]]
+soname = "liborc-0.4.so.0"
+status = "built"
+source = "orc"
+# license: BSD-3-Clause
+windows = "liborc-0.4-0.dll"
+
+# ────────────────────────────────────────────────────────────────────────────
+# L13 — libvips umbrella (Wave G). libvips 8.18.2, LGPL-2.1-or-later.
+# Optional format deps (heif/rsvg/cgif/exif/imagequant/jpeg-xl/magick/matio/
+# openexr/openslide/pdfium/poppler/raw/spng/uhdr/archive) intentionally
+# disabled for v1.2.0 — each requires additional source builds in libcommon.
+# ────────────────────────────────────────────────────────────────────────────
+
+[[libcommon.libs]]
+soname = "libvips.so.42"
+status = "built"
+source = "vips"
+# license: LGPL-2.1-or-later
+windows = "libvips-42.dll"
+
+[[libcommon.libs]]
+soname = "libvips-cpp.so.42"
+status = "built"
+source = "vips"
+# license: LGPL-2.1-or-later
+windows = "libvips-cpp-42.dll"
